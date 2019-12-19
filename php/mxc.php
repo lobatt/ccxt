@@ -540,7 +540,7 @@ class mxc extends Exchange {
         } else {
             $this->check_required_credentials();
             $auth = $this->rawencode ($this->keysort ($query));
-            $signature = $this->hash ($auth . '&api_secret=' . $this->secret, 'md5');
+            $signature = $this->hash ($this->encode ($auth . '&api_secret=' . $this->secret), 'md5');
             $suffix = 'sign=' . $signature;
             $url .= '?' . $auth . '&' . $suffix;
         }

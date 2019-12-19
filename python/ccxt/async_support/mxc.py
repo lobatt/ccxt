@@ -504,7 +504,7 @@ class mxc(Exchange):
         else:
             self.check_required_credentials()
             auth = self.rawencode(self.keysort(query))
-            signature = self.hash(auth + '&api_secret=' + self.secret, 'md5')
+            signature = self.hash(self.encode(auth + '&api_secret=' + self.secret), 'md5')
             suffix = 'sign=' + signature
             url += '?' + auth + '&' + suffix
         return {'url': url, 'method': method, 'body': body, 'headers': headers}

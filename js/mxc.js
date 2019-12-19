@@ -539,7 +539,7 @@ module.exports = class mxc extends Exchange {
         } else {
             this.checkRequiredCredentials ();
             const auth = this.rawencode (this.keysort (query));
-            const signature = this.hash (auth + '&api_secret=' + this.secret, 'md5');
+            const signature = this.hash (this.encode (auth + '&api_secret=' + this.secret), 'md5');
             const suffix = 'sign=' + signature;
             url += '?' + auth + '&' + suffix;
         }
