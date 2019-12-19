@@ -118,7 +118,7 @@ class mxc(Exchange):
         })
 
     async def fetch_markets(self, params={}):
-        response = await self.publicGetMarketInfo(params)
+        response = await self.publicGetMarketsInfo(params)
         markets = self.safe_value(response, 'data')
         if not markets:
             raise ExchangeError(self.id + ' fetchMarkets got an unrecognized response')

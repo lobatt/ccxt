@@ -116,7 +116,7 @@ module.exports = class mxc extends Exchange {
     }
 
     async fetchMarkets (params = {}) {
-        const response = await this.publicGetMarketInfo (params);
+        const response = await this.publicGetMarketsInfo (params);
         const markets = this.safeValue (response, 'data');
         if (!markets) {
             throw new ExchangeError (this.id + ' fetchMarkets got an unrecognized response');

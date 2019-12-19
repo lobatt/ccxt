@@ -117,7 +117,7 @@ class mxc extends Exchange {
     }
 
     public function fetch_markets ($params = array ()) {
-        $response = $this->publicGetMarketInfo ($params);
+        $response = $this->publicGetMarketsInfo ($params);
         $markets = $this->safe_value($response, 'data');
         if (!$markets) {
             throw new ExchangeError($this->id . ' fetchMarkets got an unrecognized response');
