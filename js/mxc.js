@@ -185,7 +185,11 @@ module.exports = class mxc extends Exchange {
 
     async fetchBalance (params = {}) {
         await this.loadMarkets ();
-        const response = await this.privateGetAccountInfo (params);
+        const request = {
+            'api_key': this.apiKey,
+            'req_time': this.milliseconds (),
+        };
+        const response = await this.privateGetAccountInfo (this.extend (request, params));
         const result = { 'info': response };
         let available = this.safeValue (response, 'available', {});
         if (Array.isArray (available)) {
