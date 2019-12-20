@@ -183,7 +183,11 @@ class mxc(Exchange):
 
     async def fetch_balance(self, params={}):
         await self.load_markets()
-        response = await self.privateGetAccountInfo(params)
+        request = {
+            'api_key': self.apiKey,
+            'req_time': self.milliseconds(),
+        }
+        response = await self.privateGetAccountInfo(self.extend(request, params))
         result = {'info': response}
         available = self.safe_value(response, 'available', {})
         if isinstance(available, list):

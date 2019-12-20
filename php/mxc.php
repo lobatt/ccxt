@@ -186,7 +186,11 @@ class mxc extends Exchange {
 
     public function fetch_balance ($params = array ()) {
         $this->load_markets();
-        $response = $this->privateGetAccountInfo ($params);
+        $request = array(
+            'api_key' => $this->apiKey,
+            'req_time' => $this->milliseconds (),
+        );
+        $response = $this->privateGetAccountInfo (array_merge($request, $params));
         $result = array( 'info' => $response );
         $available = $this->safe_value($response, 'available', array());
         if (gettype($available) === 'array' && count(array_filter(array_keys($available), 'is_string')) == 0) {
