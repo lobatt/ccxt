@@ -381,7 +381,11 @@ class mxc extends Exchange {
     }
 
     public function fetch_orders ($symbol = null, $since = null, $limit = null, $params = array ()) {
-        $response = $this->privateGetCurrentOrders ($params);
+        $request = array(
+            'api_key' => $this->apiKey,
+            'req_time' => $this->milliseconds (),
+        );
+        $response = $this->privateGetCurrentOrders (array_merge($request, $params));
         return $this->parse_orders($response['data'], null, $since, $limit);
     }
 

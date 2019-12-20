@@ -380,7 +380,11 @@ module.exports = class mxc extends Exchange {
     }
 
     async fetchOrders (symbol = undefined, since = undefined, limit = undefined, params = {}) {
-        const response = await this.privateGetCurrentOrders (params);
+        const request = {
+            'api_key': this.apiKey,
+            'req_time': this.milliseconds (),
+        };
+        const response = await this.privateGetCurrentOrders (this.extend (request, params));
         return this.parseOrders (response['data'], undefined, since, limit);
     }
 

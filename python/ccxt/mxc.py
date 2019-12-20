@@ -357,7 +357,11 @@ class mxc(Exchange):
         return self.parse_trades(response['data'], market, since, limit)
 
     def fetch_orders(self, symbol=None, since=None, limit=None, params={}):
-        response = self.privateGetCurrentOrders(params)
+        request = {
+            'api_key': self.apiKey,
+            'req_time': self.milliseconds(),
+        }
+        response = self.privateGetCurrentOrders(self.extend(request, params))
         return self.parse_orders(response['data'], None, since, limit)
 
     def fetch_order(self, id, symbol=None, params={}):
