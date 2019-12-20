@@ -217,7 +217,7 @@ class mxc extends Exchange {
         );
         $response = $this->publicGetDepth (array_merge($request, $params));
         $orderbook = $this->safe_value($response, 'data');
-        return $this->parse_order_book($orderbook);
+        return $this->parse_order_book($orderbook, null, 'bids', 'asks', 'price', 'quantity');
     }
 
     public function parse_ohlcv ($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
@@ -381,15 +381,11 @@ class mxc extends Exchange {
     }
 
     public function fetch_orders ($symbol = null, $since = null, $limit = null, $params = array ()) {
-<<<<<<< HEAD
         $request = array(
             'api_key' => $this->apiKey,
             'req_time' => $this->milliseconds (),
         );
         $response = $this->privateGetCurrentOrders (array_merge($request, $params));
-=======
-        $response = $this->privateGetCurrentOrders ($params);
->>>>>>> fbc76898a302afcf1f85df86c7c1f96998157181
         return $this->parse_orders($response['data'], null, $since, $limit);
     }
 

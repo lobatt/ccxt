@@ -216,7 +216,7 @@ module.exports = class mxc extends Exchange {
         };
         const response = await this.publicGetDepth (this.extend (request, params));
         const orderbook = this.safeValue (response, 'data');
-        return this.parseOrderBook (orderbook);
+        return this.parseOrderBook (orderbook, undefined, 'bids', 'asks', 'price', 'quantity');
     }
 
     parseOHLCV (ohlcv, market = undefined, timeframe = '1m', since = undefined, limit = undefined) {
