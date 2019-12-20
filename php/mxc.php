@@ -392,8 +392,8 @@ class mxc extends Exchange {
             'api_key' => $this->apiKey,
             'req_time' => $this->milliseconds (),
         );
-        $response = $this->privatePostGetOrder (array_merge($request, $params));
-        return $this->parse_order($response['order']);
+        $response = $this->privateGetOrder (array_merge($request, $params));
+        return $this->parse_order($response['data']);
     }
 
     public function parse_order_side ($side) {
@@ -446,6 +446,9 @@ class mxc extends Exchange {
         //     'type' => 'sell'),
         //
         $id = $this->safe_string($order, 'id');
+        if ($id === null) {
+            $id = $this->safe_string($order, 'data');
+        }
         $symbol = null;
         $marketId = $this->safe_string($order, 'market');
         if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
@@ -466,6 +469,9 @@ class mxc extends Exchange {
         $filled = $this->safe_float($order, 'tradedQuantity');
         $average = null;
         $remaining = null;
+        if (($filled !== null) && ($amount !== null)) {
+            $remaining = $amount - $filled;
+        }
         return array(
             'id' => $id,
             'datetime' => $this->iso8601 ($timestamp),

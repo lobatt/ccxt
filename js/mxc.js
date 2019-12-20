@@ -391,8 +391,8 @@ module.exports = class mxc extends Exchange {
             'api_key': this.apiKey,
             'req_time': this.milliseconds (),
         };
-        const response = await this.privatePostGetOrder (this.extend (request, params));
-        return this.parseOrder (response['order']);
+        const response = await this.privateGetOrder (this.extend (request, params));
+        return this.parseOrder (response['data']);
     }
 
     parseOrderSide (side) {
@@ -444,7 +444,10 @@ module.exports = class mxc extends Exchange {
         //     'timestamp': 1531158583,
         //     'type': 'sell'},
         //
-        const id = this.safeString (order, 'id');
+        let id = this.safeString (order, 'id');
+        if (id === undefined) {
+            id = this.safeString (order, 'data');
+        }
         let symbol = undefined;
         const marketId = this.safeString (order, 'market');
         if (marketId in this.markets_by_id) {
@@ -464,7 +467,10 @@ module.exports = class mxc extends Exchange {
         }
         const filled = this.safeFloat (order, 'tradedQuantity');
         const average = undefined;
-        const remaining = undefined;
+        let remaining = undefined;
+        if ((filled !== undefined) && (amount !== undefined)) {
+            remaining = amount - filled;
+        }
         return {
             'id': id,
             'datetime': this.iso8601 (timestamp),

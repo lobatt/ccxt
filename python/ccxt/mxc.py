@@ -368,8 +368,8 @@ class mxc(Exchange):
             'api_key': self.apiKey,
             'req_time': self.milliseconds(),
         }
-        response = self.privatePostGetOrder(self.extend(request, params))
-        return self.parse_order(response['order'])
+        response = self.privateGetOrder(self.extend(request, params))
+        return self.parse_order(response['data'])
 
     def parse_order_side(self, side):
         sides = {
@@ -419,6 +419,8 @@ class mxc(Exchange):
         #     'type': 'sell'},
         #
         id = self.safe_string(order, 'id')
+        if id is None:
+            id = self.safe_string(order, 'data')
         symbol = None
         marketId = self.safe_string(order, 'market')
         if marketId in self.markets_by_id:
@@ -436,6 +438,8 @@ class mxc(Exchange):
         filled = self.safe_float(order, 'tradedQuantity')
         average = None
         remaining = None
+        if (filled is not None) and (amount is not None):
+            remaining = amount - filled
         return {
             'id': id,
             'datetime': self.iso8601(timestamp),
