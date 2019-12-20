@@ -502,13 +502,10 @@ class mxc extends Exchange {
         $request = array(
             'api_key' => $this->apiKey,
             'req_time' => $this->milliseconds (),
-            'market' => $market['id'],
+            'market' => $this->market_id($symbol),
             'price' => $price,
             'quantity' => $amount,
             'trade_type' => ($side === 'buy' ? 1 : 2),
-            'currencyPair' => $market['id'],
-            'rate' => $price,
-            'amount' => $amount,
         );
         $response = $this->privatePostOrder (array_merge($request, $params));
         return $this->parse_order(array_merge(array(

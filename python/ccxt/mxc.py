@@ -470,13 +470,10 @@ class mxc(Exchange):
         request = {
             'api_key': self.apiKey,
             'req_time': self.milliseconds(),
-            'market': market['id'],
+            'market': self.market_id(symbol),
             'price': price,
             'quantity': amount,
             'trade_type': (side == 1 if 'buy' else 2),
-            'currencyPair': market['id'],
-            'rate': price,
-            'amount': amount,
         }
         response = self.privatePostOrder(self.extend(request, params))
         return self.parse_order(self.extend({

@@ -501,13 +501,10 @@ module.exports = class mxc extends Exchange {
         const request = {
             'api_key': this.apiKey,
             'req_time': this.milliseconds (),
-            'market': market['id'],
+            'market': this.marketId (symbol),
             'price': price,
             'quantity': amount,
             'trade_type': (side === 'buy' ? 1 : 2),
-            'currencyPair': market['id'],
-            'rate': price,
-            'amount': amount,
         };
         const response = await this.privatePostOrder (this.extend (request, params));
         return this.parseOrder (this.extend ({
