@@ -458,11 +458,13 @@ module.exports = class mxc extends Exchange {
         const status = this.parseOrderStatus (this.safeString (order, 'status'));
         const side = this.parseOrderSide (this.safeString (order, 'type'));
         const price = this.safeFloat (order, 'price');
-        const average = this.safeFloat (order, 'tradedAmount') / this.safeFloat (order, 'tradedQuantity');
-        const amount = this.safeFloat (order, 'totalQuantity');
+        let amount = this.safeFloat (order, 'totalQuantity');
+        if (amount === undefined) {
+            amount = this.safeFloat (order, 'initialAmount');
+        }
         const filled = this.safeFloat (order, 'tradedQuantity');
-        // In the order status response, this field has a different name.
-        const remaining = amount - filled;
+        const average = undefined;
+        const remaining = undefined;
         return {
             'id': id,
             'datetime': this.iso8601 (timestamp),

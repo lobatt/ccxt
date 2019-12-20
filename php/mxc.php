@@ -459,11 +459,13 @@ class mxc extends Exchange {
         $status = $this->parse_order_status($this->safe_string($order, 'status'));
         $side = $this->parse_order_side ($this->safe_string($order, 'type'));
         $price = $this->safe_float($order, 'price');
-        $average = $this->safe_float($order, 'tradedAmount') / $this->safe_float($order, 'tradedQuantity');
         $amount = $this->safe_float($order, 'totalQuantity');
+        if ($amount === null) {
+            $amount = $this->safe_float($order, 'initialAmount');
+        }
         $filled = $this->safe_float($order, 'tradedQuantity');
-        // In the $order $status response, this field has a different name.
-        $remaining = $amount - $filled;
+        $average = null;
+        $remaining = null;
         return array(
             'id' => $id,
             'datetime' => $this->iso8601 ($timestamp),

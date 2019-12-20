@@ -430,11 +430,12 @@ class mxc(Exchange):
         status = self.parse_order_status(self.safe_string(order, 'status'))
         side = self.parse_order_side(self.safe_string(order, 'type'))
         price = self.safe_float(order, 'price')
-        average = self.safe_float(order, 'tradedAmount') / self.safe_float(order, 'tradedQuantity')
         amount = self.safe_float(order, 'totalQuantity')
+        if amount is None:
+            amount = self.safe_float(order, 'initialAmount')
         filled = self.safe_float(order, 'tradedQuantity')
-        # In the order status response, self field has a different name.
-        remaining = amount - filled
+        average = None
+        remaining = None
         return {
             'id': id,
             'datetime': self.iso8601(timestamp),
