@@ -224,13 +224,18 @@ class gateio extends Exchange {
         $this->load_markets();
         $response = $this->privatePostBalances ($params);
         $result = array( 'info' => $response );
-        $currencyIds = is_array($response) ? array_keys($response) : array();
+        $available = $this->safe_value($response, 'available', array());
+        if (gettype($available) === 'array' && count(array_filter(array_keys($available), 'is_string')) == 0) {
+            $available = array();
+        }
+        $locked = $this->safe_value($response, 'locked', array());
+        $currencyIds = is_array($available) ? array_keys($available) : array();
         for ($i = 0; $i < count($currencyIds); $i++) {
             $currencyId = $currencyIds[$i];
             $code = $this->safe_currency_code($currencyId);
             $account = $this->account ();
-            $account['free'] = $this->safe_float($response[$currencyId], 'available');
-            $account['used'] = $this->safe_float($response[$currencyId], 'frozen');
+            $account['free'] = $this->safe_float($available, $currencyId);
+            $account['used'] = $this->safe_float($locked, $currencyId);
             $result[$code] = $account;
         }
         return $this->parse_balance($result);

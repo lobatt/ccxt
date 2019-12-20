@@ -223,13 +223,18 @@ module.exports = class gateio extends Exchange {
         await this.loadMarkets ();
         const response = await this.privatePostBalances (params);
         const result = { 'info': response };
-        const currencyIds = Object.keys (response);
+        let available = this.safeValue (response, 'available', {});
+        if (Array.isArray (available)) {
+            available = {};
+        }
+        const locked = this.safeValue (response, 'locked', {});
+        const currencyIds = Object.keys (available);
         for (let i = 0; i < currencyIds.length; i++) {
             const currencyId = currencyIds[i];
             const code = this.safeCurrencyCode (currencyId);
             const account = this.account ();
-            account['free'] = this.safeFloat (response[currencyId], 'available');
-            account['used'] = this.safeFloat (response[currencyId], 'frozen');
+            account['free'] = this.safeFloat (available, currencyId);
+            account['used'] = this.safeFloat (locked, currencyId);
             result[code] = account;
         }
         return this.parseBalance (result);

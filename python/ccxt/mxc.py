@@ -189,17 +189,13 @@ class mxc(Exchange):
         }
         response = self.privateGetAccountInfo(self.extend(request, params))
         result = {'info': response}
-        available = self.safe_value(response, 'available', {})
-        if isinstance(available, list):
-            available = {}
-        locked = self.safe_value(response, 'frozen', {})
-        currencyIds = list(available.keys())
+        currencyIds = list(response.keys())
         for i in range(0, len(currencyIds)):
             currencyId = currencyIds[i]
             code = self.safe_currency_code(currencyId)
             account = self.account()
-            account['free'] = self.safe_float(available, currencyId)
-            account['used'] = self.safe_float(locked, currencyId)
+            account['free'] = self.safe_float(response[currencyId], 'available')
+            account['used'] = self.safe_float(response[currencyId], 'frozen')
             result[code] = account
         return self.parse_balance(result)
 
