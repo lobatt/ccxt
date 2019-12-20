@@ -425,7 +425,7 @@ class mxc(Exchange):
             market = self.markets_by_id[marketId]
         if market is not None:
             symbol = market['symbol']
-        dateStr = self.safeStrin(order, 'createTime')
+        dateStr = self.safe_string(order, 'createTime')
         timestamp = self.parse_date(dateStr)
         status = self.parse_order_status(self.safe_string(order, 'status'))
         side = self.parse_order_side(self.safe_string(order, 'type'))

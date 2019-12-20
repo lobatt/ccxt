@@ -453,7 +453,7 @@ module.exports = class mxc extends Exchange {
         if (market !== undefined) {
             symbol = market['symbol'];
         }
-        const dateStr = this.safeStrin (order, 'createTime');
+        const dateStr = this.safeString (order, 'createTime');
         const timestamp = this.parseDate (dateStr);
         const status = this.parseOrderStatus (this.safeString (order, 'status'));
         const side = this.parseOrderSide (this.safeString (order, 'type'));

@@ -454,7 +454,7 @@ class mxc extends Exchange {
         if ($market !== null) {
             $symbol = $market['symbol'];
         }
-        $dateStr = $this->safeStrin ($order, 'createTime');
+        $dateStr = $this->safe_string($order, 'createTime');
         $timestamp = $this->parse_date($dateStr);
         $status = $this->parse_order_status($this->safe_string($order, 'status'));
         $side = $this->parse_order_side ($this->safe_string($order, 'type'));
