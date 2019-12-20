@@ -504,7 +504,7 @@ module.exports = class mxc extends Exchange {
             'market': this.marketId (symbol),
             'price': price,
             'quantity': amount,
-            'trade_type': (side === 'buy' ? 1 : 2),
+            'trade_type': (side === 'buy') ? '1' : '2',
         };
         const response = await this.privatePostOrder (this.extend (request, params));
         return this.parseOrder (this.extend ({

@@ -473,7 +473,7 @@ class mxc(Exchange):
             'market': self.market_id(symbol),
             'price': price,
             'quantity': amount,
-            'trade_type': (side == 1 if 'buy' else 2),
+            'trade_type': '1' if (side == 'buy') else '2',
         }
         response = self.privatePostOrder(self.extend(request, params))
         return self.parse_order(self.extend({

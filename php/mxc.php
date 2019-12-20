@@ -505,7 +505,7 @@ class mxc extends Exchange {
             'market' => $this->market_id($symbol),
             'price' => $price,
             'quantity' => $amount,
-            'trade_type' => ($side === 'buy' ? 1 : 2),
+            'trade_type' => ($side === 'buy') ? '1' : '2',
         );
         $response = $this->privatePostOrder (array_merge($request, $params));
         return $this->parse_order(array_merge(array(
