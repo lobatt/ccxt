@@ -458,7 +458,7 @@ class mxc extends Exchange {
             $symbol = $market['symbol'];
         }
         $dateStr = $this->safe_string($order, 'createTime');
-        $timestamp = $this->parse_date($dateStr);
+        $timestamp = $this->parse_date($dateStr . ' GMT+8');
         $status = $this->parse_order_status($this->safe_string($order, 'status'));
         $side = $this->parse_order_side ($this->safe_string($order, 'type'));
         $price = $this->safe_float($order, 'price');

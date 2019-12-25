@@ -457,7 +457,7 @@ module.exports = class mxc extends Exchange {
             symbol = market['symbol'];
         }
         const dateStr = this.safeString (order, 'createTime');
-        const timestamp = this.parseDate (dateStr);
+        const timestamp = this.parseDate (dateStr + ' GMT+8');
         const status = this.parseOrderStatus (this.safeString (order, 'status'));
         const side = this.parseOrderSide (this.safeString (order, 'type'));
         const price = this.safeFloat (order, 'price');
