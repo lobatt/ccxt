@@ -428,7 +428,9 @@ class mxc(Exchange):
         if market is not None:
             symbol = market['symbol']
         dateStr = self.safe_string(order, 'createTime')
-        timestamp = self.parse_date(dateStr + ' GMT+8')
+        timestamp = self.parse_date(dateStr)
+        if dateStr is not None:
+            timestamp = self.parse_date(dateStr + ' GMT+8')
         status = self.parse_order_status(self.safe_string(order, 'status'))
         side = self.parse_order_side(self.safe_string(order, 'type'))
         price = self.safe_float(order, 'price')
