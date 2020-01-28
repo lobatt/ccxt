@@ -153,6 +153,7 @@ class Exchange {
         'lykke',
         'mercado',
         'mixcoins',
+        'mxc',
         'oceanex',
         'okcoin',
         'okex',
