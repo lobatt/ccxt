@@ -6,6 +6,7 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\OrderNotFound;
 
 class acx extends Exchange {
 
@@ -92,6 +93,9 @@ class acx extends Exchange {
                     'percentage' => true,
                     'withdraw' => array(), // There is only 1% fee on withdrawals to your bank account.
                 ),
+            ),
+            'commonCurrencies' => array(
+                'PLA' => 'Plair',
             ),
             'exceptions' => array(
                 '2002' => '\\ccxt\\InsufficientFunds',

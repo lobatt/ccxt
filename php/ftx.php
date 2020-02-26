@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\InvalidOrder;
 
 class ftx extends Exchange {
 
@@ -51,7 +53,7 @@ class ftx extends Exchange {
                 '15m' => '900',
                 '1h' => '3600',
                 '4h' => '14400',
-                '24h' => '86400',
+                '1d' => '86400',
             ),
             'api' => array(
                 'public' => array(
@@ -90,6 +92,8 @@ class ftx extends Exchange {
                         'lt/balances',
                         'lt/creations',
                         'lt/redemptions',
+                        'subaccounts',
+                        'subaccounts/{nickname}/balances',
                     ),
                     'post' => array(
                         'account/leverage',
@@ -98,12 +102,16 @@ class ftx extends Exchange {
                         'conditional_orders',
                         'lt/{token_name}/create',
                         'lt/{token_name}/redeem',
+                        'subaccounts',
+                        'subaccounts/update_name',
+                        'subaccounts/transfer',
                     ),
                     'delete' => array(
                         'orders/{order_id}',
                         'orders/by_client_id/{client_order_id}',
                         'orders',
                         'conditional_orders/{order_id}',
+                        'subaccounts',
                     ),
                 ),
             ),
@@ -496,11 +504,16 @@ class ftx extends Exchange {
             'market_name' => $market['id'],
             'resolution' => $this->timeframes[$timeframe],
         );
-        if ($limit !== null) {
+        // max 1501 candles, including the current candle when $since is not specified
+        $limit = ($limit === null) ? 1501 : $limit;
+        if ($since === null) {
+            $request['end_time'] = $this->seconds ();
             $request['limit'] = $limit;
-        }
-        if ($since !== null) {
+            $request['start_time'] = $request['end_time'] - $limit * $this->parse_timeframe($timeframe);
+        } else {
             $request['start_time'] = intval ($since / 1000);
+            $request['limit'] = $limit;
+            $request['end_time'] = $this->sum ($request['start_time'], $limit * $this->parse_timeframe($timeframe));
         }
         $response = $this->publicGetMarketsMarketNameCandles (array_merge($request, $params));
         //
@@ -570,7 +583,7 @@ class ftx extends Exchange {
         $symbol = null;
         if ($marketId !== null) {
             if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
-                $market = $this->markets_by_id;
+                $market = $this->markets_by_id[$marketId];
                 $symbol = $market['symbol'];
             } else {
                 $base = $this->safe_currency_code($this->safe_string($trade, 'baseCurrency'));
@@ -750,7 +763,7 @@ class ftx extends Exchange {
 
     public function parse_order ($order, $market = null) {
         //
-        // fetchOrder, fetchOrders, fetchOpenOrders, createOrder ("limit", "$market")
+        // limit orders - fetchOrder, fetchOrders, fetchOpenOrders, createOrder
         //
         //     {
         //         "createdAt" => "2019-03-05T09:56:55.728933+00:00",
@@ -768,6 +781,27 @@ class ftx extends Exchange {
         //         "ioc" => false,
         //         "postOnly" => false,
         //         "clientId" => null,
+        //     }
+        //
+        // $market orders - fetchOrder, fetchOrders, fetchOpenOrders, createOrder
+        //
+        //     {
+        //         "avgFillPrice" => 2666.0,
+        //         "clientId" => None,
+        //         "createdAt" => "2020-02-12T00 => 53 => 49.009726+00 => 00",
+        //         "filledSize" => 0.0007,
+        //         "future" => None,
+        //         "$id" => 3109208514,
+        //         "ioc" => True,
+        //         "$market" => "BNBBULL/USD",
+        //         "postOnly" => False,
+        //         "$price" => None,
+        //         "reduceOnly" => False,
+        //         "remainingSize" => 0.0,
+        //         "$side" => "buy",
+        //         "size" => 0.0007,
+        //         "$status" => "closed",
+        //         "$type" => "$market"
         //     }
         //
         // createOrder (conditional, "stop", "trailingStop", or "takeProfit")
@@ -806,11 +840,12 @@ class ftx extends Exchange {
         $side = $this->safe_string($order, 'side');
         $type = $this->safe_string($order, 'type');
         $amount = $this->safe_float($order, 'size');
+        $average = $this->safe_float($order, 'avgFillPrice');
+        $price = $this->safe_float_2($order, 'price', 'triggerPrice', $average);
         $cost = null;
-        if ($filled !== null && $amount !== null) {
-            $cost = $filled * $amount;
+        if ($filled !== null && $price !== null) {
+            $cost = $filled * $price;
         }
-        $price = $this->safe_float_2($order, 'price', 'triggerPrice');
         $lastTradeTimestamp = $this->parse8601 ($this->safe_string($order, 'triggeredAt'));
         return array(
             'info' => $order,
@@ -824,7 +859,7 @@ class ftx extends Exchange {
             'price' => $price,
             'amount' => $amount,
             'cost' => $cost,
-            'average' => null,
+            'average' => $average,
             'filled' => $filled,
             'remaining' => $remaining,
             'status' => $status,

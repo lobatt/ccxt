@@ -6,6 +6,10 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
+use \ccxt\BadResponse;
+use \ccxt\DDoSProtection;
 
 class bytetrade extends Exchange {
 
@@ -93,6 +97,7 @@ class bytetrade extends Exchange {
             ),
             'commonCurrencies' => array(
                 '48' => 'Blocktonic',
+                'BHT' => 'ByteHub',
             ),
             'exceptions' => array(
                 'vertify error' => '\\ccxt\\AuthenticationError', // typo on the exchange side, 'vertify'
@@ -575,16 +580,17 @@ class bytetrade extends Exchange {
             $typeNum = 1;
         } else {
             $typeNum = 2;
+            $price = 0;
         }
         $normalSymbol = $market['normalSymbol'];
         $baseId = $market['baseId'];
         $baseCurrency = $this->currency ($market['base']);
         $amountTruncated = $this->amount_to_precision($symbol, $amount);
-        $amountChain = $this->toWei ($amountTruncated, 'ether', $baseCurrency['precision']['amount']);
+        $amountChain = $this->toWei ($amountTruncated, $baseCurrency['precision']['amount']);
         $quoteId = $market['quoteId'];
         $quoteCurrency = $this->currency ($market['quote']);
         $priceRounded = $this->price_to_precision($symbol, $price);
-        $priceChain = $this->toWei ($priceRounded, 'ether', $quoteCurrency['precision']['amount']);
+        $priceChain = $this->toWei ($priceRounded, $quoteCurrency['precision']['amount']);
         $now = $this->milliseconds ();
         $expiration = $this->milliseconds ();
         $datetime = $this->iso8601 ($now);
@@ -903,7 +909,7 @@ class bytetrade extends Exchange {
         );
     }
 
-    public function transfer ($code, $amount, $address, $params = array ()) {
+    public function transfer ($code, $amount, $address, $message = '', $params = array ()) {
         $this->check_required_dependencies();
         if ($this->apiKey === null) {
             throw new ArgumentsRequired('transfer requires $this->apiKey');
@@ -911,7 +917,7 @@ class bytetrade extends Exchange {
         $this->load_markets();
         $currency = $this->currency ($code);
         $amountTruncate = $this->decimal_to_precision($amount, TRUNCATE, $currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
-        $amountChain = $this->toWei ($amountTruncate, 'ether', $currency['precision']['amount']);
+        $amountChain = $this->toWei ($amountTruncate, $currency['precision']['amount']);
         $assetType = intval ($currency['id']);
         $now = $this->milliseconds ();
         $expiration = $now;
@@ -928,7 +934,7 @@ class bytetrade extends Exchange {
             $this->numberToLE (1, 1),
             $this->numberToLE ((int) floor($expiration / 1000), 4),
             $this->numberToLE (1, 1),
-            $this->numberToLE (0, 1),
+            $this->numberToLE (28, 1),
             $this->numberToLE (0, 8),
             $this->numberToLE ($feeAmount, 8),  // string for 32 bit php
             $this->numberToLE (strlen($this->apiKey), 1),
@@ -938,6 +944,9 @@ class bytetrade extends Exchange {
             $this->numberToLE ($assetType, 4),
             $this->numberToLE ($this->integer_divide ($amountChain, $eightBytes), 8),
             $this->numberToLE ($this->integer_modulo ($amountChain, $eightBytes), 8),
+            $this->numberToLE (1, 1),
+            $this->numberToLE (strlen($message), 1),
+            $this->encode ($message),
             $this->numberToLE (0, 1),
             $this->numberToLE (1, 1),
             $this->numberToLE (strlen($chainName), 1),
@@ -955,13 +964,14 @@ class bytetrade extends Exchange {
             'to' => $address,
             'asset_type' => intval ($currency['id']),
             'amount' => (string) $amountChain,
+            'message' => $message,
         );
         $fatty = array(
             'timestamp' => $datetime,
             'expiration' => $expirationDatetime,
             'operations' => array(
                 array(
-                    0,
+                    28,
                     $operation,
                 ),
             ),
@@ -1183,7 +1193,7 @@ class bytetrade extends Exchange {
         $currency = $this->currency ($code);
         $coinId = $currency['id'];
         $amountTruncate = $this->decimal_to_precision($amount, TRUNCATE, $currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
-        $amountChain = $this->toWei ($amountTruncate, 'ether', $currency['info']['externalPrecision']);
+        $amountChain = $this->toWei ($amountTruncate, $currency['info']['externalPrecision']);
         $eightBytes = $this->integer_pow ('2', '64');
         $assetFee = 0;
         $byteStringArray = array();
@@ -1281,7 +1291,7 @@ class bytetrade extends Exchange {
             $request = array(
                 'chainType' => $chainId,
                 'trObj' => $this->json ($fatty),
-                'chainContractAddresss' => $chainContractAddress,
+                'chainContractAddress' => $chainContractAddress,
             );
         } else {
             $operation = array(
@@ -1320,14 +1330,14 @@ class bytetrade extends Exchange {
                     'chainType' => $chainId,
                     'toExternalAddress' => 'noneed',
                     'trObj' => $this->json ($fatty),
-                    'chainContractAddresss' => $chainContractAddress,
+                    'chainContractAddress' => $chainContractAddress,
                 );
             } else {
                 $request = array(
                     'chainType' => $chainId,
                     'toExternalAddress' => $address,
                     'trObj' => $this->json ($fatty),
-                    'chainContractAddresss' => $chainContractAddress,
+                    'chainContractAddress' => $chainContractAddress,
                 );
             }
         }

@@ -6,6 +6,7 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ArgumentsRequired;
 
 class coinfalcon extends Exchange {
 
@@ -423,7 +424,7 @@ class coinfalcon extends Exchange {
         }
         $ErrorClass = $this->safe_value(array(
             '401' => '\\ccxt\\AuthenticationError',
-            '429' => '\\ccxt\\DDoSProtection',
+            '429' => '\\ccxt\\RateLimitExceeded',
         ), $code, '\\ccxt\\ExchangeError');
         throw new $ErrorClass($body);
     }

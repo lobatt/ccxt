@@ -6,6 +6,9 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
+use \ccxt\OrderNotFound;
 
 class oceanex extends Exchange {
 
@@ -94,6 +97,9 @@ class oceanex extends Exchange {
                     'maker' => 0.1 / 100,
                     'taker' => 0.1 / 100,
                 ),
+            ),
+            'commonCurrencies' => array(
+                'PLA' => 'Plair',
             ),
             'exceptions' => array(
                 'codes' => array(

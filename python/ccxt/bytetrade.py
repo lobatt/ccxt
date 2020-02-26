@@ -103,6 +103,7 @@ class bytetrade(Exchange):
             },
             'commonCurrencies': {
                 '48': 'Blocktonic',
+                'BHT': 'ByteHub',
             },
             'exceptions': {
                 'vertify error': AuthenticationError,  # typo on the exchange side, 'vertify'
@@ -543,15 +544,16 @@ class bytetrade(Exchange):
             typeNum = 1
         else:
             typeNum = 2
+            price = 0
         normalSymbol = market['normalSymbol']
         baseId = market['baseId']
         baseCurrency = self.currency(market['base'])
         amountTruncated = self.amount_to_precision(symbol, amount)
-        amountChain = self.toWei(amountTruncated, 'ether', baseCurrency['precision']['amount'])
+        amountChain = self.toWei(amountTruncated, baseCurrency['precision']['amount'])
         quoteId = market['quoteId']
         quoteCurrency = self.currency(market['quote'])
         priceRounded = self.price_to_precision(symbol, price)
-        priceChain = self.toWei(priceRounded, 'ether', quoteCurrency['precision']['amount'])
+        priceChain = self.toWei(priceRounded, quoteCurrency['precision']['amount'])
         now = self.milliseconds()
         expiration = self.milliseconds()
         datetime = self.iso8601(now)
@@ -851,14 +853,14 @@ class bytetrade(Exchange):
             'fee': None,
         }
 
-    def transfer(self, code, amount, address, params={}):
+    def transfer(self, code, amount, address, message='', params={}):
         self.check_required_dependencies()
         if self.apiKey is None:
             raise ArgumentsRequired('transfer requires self.apiKey')
         self.load_markets()
         currency = self.currency(code)
         amountTruncate = self.decimal_to_precision(amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING)
-        amountChain = self.toWei(amountTruncate, 'ether', currency['precision']['amount'])
+        amountChain = self.toWei(amountTruncate, currency['precision']['amount'])
         assetType = int(currency['id'])
         now = self.milliseconds()
         expiration = now
@@ -875,7 +877,7 @@ class bytetrade(Exchange):
             self.numberToLE(1, 1),
             self.numberToLE(int(math.floor(expiration / 1000)), 4),
             self.numberToLE(1, 1),
-            self.numberToLE(0, 1),
+            self.numberToLE(28, 1),
             self.numberToLE(0, 8),
             self.numberToLE(feeAmount, 8),  # string for 32 bit php
             self.numberToLE(len(self.apiKey), 1),
@@ -885,6 +887,9 @@ class bytetrade(Exchange):
             self.numberToLE(assetType, 4),
             self.numberToLE(self.integer_divide(amountChain, eightBytes), 8),
             self.numberToLE(self.integer_modulo(amountChain, eightBytes), 8),
+            self.numberToLE(1, 1),
+            self.numberToLE(len(message), 1),
+            self.encode(message),
             self.numberToLE(0, 1),
             self.numberToLE(1, 1),
             self.numberToLE(len(chainName), 1),
@@ -902,13 +907,14 @@ class bytetrade(Exchange):
             'to': address,
             'asset_type': int(currency['id']),
             'amount': str(amountChain),
+            'message': message,
         }
         fatty = {
             'timestamp': datetime,
             'expiration': expirationDatetime,
             'operations': [
                 [
-                    0,
+                    28,
                     operation,
                 ],
             ],
@@ -1105,7 +1111,7 @@ class bytetrade(Exchange):
         currency = self.currency(code)
         coinId = currency['id']
         amountTruncate = self.decimal_to_precision(amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING)
-        amountChain = self.toWei(amountTruncate, 'ether', currency['info']['externalPrecision'])
+        amountChain = self.toWei(amountTruncate, currency['info']['externalPrecision'])
         eightBytes = self.integer_pow('2', '64')
         assetFee = 0
         byteStringArray = []
@@ -1202,7 +1208,7 @@ class bytetrade(Exchange):
             request = {
                 'chainType': chainId,
                 'trObj': self.json(fatty),
-                'chainContractAddresss': chainContractAddress,
+                'chainContractAddress': chainContractAddress,
             }
         else:
             operation = {
@@ -1241,14 +1247,14 @@ class bytetrade(Exchange):
                     'chainType': chainId,
                     'toExternalAddress': 'noneed',
                     'trObj': self.json(fatty),
-                    'chainContractAddresss': chainContractAddress,
+                    'chainContractAddress': chainContractAddress,
                 }
             else:
                 request = {
                     'chainType': chainId,
                     'toExternalAddress': address,
                     'trObj': self.json(fatty),
-                    'chainContractAddresss': chainContractAddress,
+                    'chainContractAddress': chainContractAddress,
                 }
         response = self.publicPostTransactionWithdraw(request)
         return {

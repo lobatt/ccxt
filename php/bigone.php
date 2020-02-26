@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
 
 class bigone extends Exchange {
 
@@ -23,6 +25,7 @@ class bigone extends Exchange {
                 'fetchDeposits' => true,
                 'fetchMyTrades' => true,
                 'fetchOHLCV' => true,
+                'fetchOrder' => true,
                 'fetchOrders' => true,
                 'fetchOpenOrders' => true,
                 'fetchClosedOrders' => true,
@@ -44,7 +47,7 @@ class bigone extends Exchange {
                 '1w' => 'week1',
                 '1M' => 'month1',
             ),
-            'hostname' => 'big.one', // set to 'b1.run' for China mainland
+            'hostname' => 'big.one', // or 'bigone.com'
             'urls' => array(
                 'logo' => 'https://user-images.githubusercontent.com/1294454/69354403-1d532180-0c91-11ea-88ed-44c06cefdf87.jpg',
                 'api' => array(
@@ -185,6 +188,7 @@ class bigone extends Exchange {
                 'amount' => $this->safe_integer($market, 'base_scale'),
                 'price' => $this->safe_integer($market, 'quote_scale'),
             );
+            $minCost = $this->safe_integer($market, 'min_quote_value');
             $entry = array(
                 'id' => $id,
                 'uuid' => $uuid,
@@ -198,14 +202,14 @@ class bigone extends Exchange {
                 'limits' => array(
                     'amount' => array(
                         'min' => pow(10, -$precision['amount']),
-                        'max' => pow(10, $precision['amount']),
+                        'max' => null,
                     ),
                     'price' => array(
                         'min' => pow(10, -$precision['price']),
-                        'max' => pow(10, $precision['price']),
+                        'max' => null,
                     ),
                     'cost' => array(
-                        'min' => null,
+                        'min' => $minCost,
                         'max' => null,
                     ),
                 ),

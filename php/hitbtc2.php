@@ -6,6 +6,10 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\InvalidOrder;
+use \ccxt\OrderNotFound;
+use \ccxt\ExchangeNotAvailable;
 
 class hitbtc2 extends hitbtc {
 
@@ -19,7 +23,7 @@ class hitbtc2 extends hitbtc {
             'has' => array(
                 'createDepositAddress' => true,
                 'fetchDepositAddress' => true,
-                'CORS' => true,
+                'CORS' => false,
                 'editOrder' => true,
                 'fetchCurrencies' => true,
                 'fetchOHLCV' => true,
@@ -544,6 +548,8 @@ class hitbtc2 extends hitbtc {
                 'defaultTimeInForce' => 'FOK',
             ),
             'exceptions' => array(
+                '504' => '\\ccxt\\RequestTimeout', // array("error":array("code":504,"message":"Gateway Timeout"))
+                '1002' => '\\ccxt\\AuthenticationError', // array("error":array("code":1002,"message":"Authorization failed","description":""))
                 '1003' => '\\ccxt\\PermissionDenied', // "Action is forbidden for this API key"
                 '2010' => '\\ccxt\\InvalidOrder', // "Quantity not a valid number"
                 '2001' => '\\ccxt\\BadSymbol', // "Symbol not found"

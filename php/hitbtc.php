@@ -6,6 +6,10 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\InsufficientFunds;
+use \ccxt\InvalidOrder;
+use \ccxt\OrderNotFound;
 
 class hitbtc extends Exchange {
 
@@ -288,8 +292,8 @@ class hitbtc extends Exchange {
                         'ZSC' => 191,
                     ),
                     'deposit' => array(
-                        'BTC' => 0.0006,
-                        'ETH' => 0.003,
+                        'BTC' => 0,
+                        'ETH' => 0,
                         'BCH' => 0,
                         'USDT' => 0,
                         'BTG' => 0,
@@ -493,6 +497,7 @@ class hitbtc extends Exchange {
                 'GET' => 'Themis',
                 'HSR' => 'HC',
                 'LNC' => 'LinkerCoin',
+                'PLA' => 'PlayChip',
                 'UNC' => 'Unigame',
                 'USD' => 'USDT',
                 'XBT' => 'BTC',

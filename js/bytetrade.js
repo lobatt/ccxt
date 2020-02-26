@@ -93,6 +93,7 @@ module.exports = class bytetrade extends Exchange {
             },
             'commonCurrencies': {
                 '48': 'Blocktonic',
+                'BHT': 'ByteHub',
             },
             'exceptions': {
                 'vertify error': AuthenticationError, // typo on the exchange side, 'vertify'
@@ -575,16 +576,17 @@ module.exports = class bytetrade extends Exchange {
             typeNum = 1;
         } else {
             typeNum = 2;
+            price = 0;
         }
         const normalSymbol = market['normalSymbol'];
         const baseId = market['baseId'];
         const baseCurrency = this.currency (market['base']);
         const amountTruncated = this.amountToPrecision (symbol, amount);
-        const amountChain = this.toWei (amountTruncated, 'ether', baseCurrency['precision']['amount']);
+        const amountChain = this.toWei (amountTruncated, baseCurrency['precision']['amount']);
         const quoteId = market['quoteId'];
         const quoteCurrency = this.currency (market['quote']);
         const priceRounded = this.priceToPrecision (symbol, price);
-        const priceChain = this.toWei (priceRounded, 'ether', quoteCurrency['precision']['amount']);
+        const priceChain = this.toWei (priceRounded, quoteCurrency['precision']['amount']);
         const now = this.milliseconds ();
         const expiration = this.milliseconds ();
         let datetime = this.iso8601 (now);
@@ -903,7 +905,7 @@ module.exports = class bytetrade extends Exchange {
         };
     }
 
-    async transfer (code, amount, address, params = {}) {
+    async transfer (code, amount, address, message = '', params = {}) {
         this.checkRequiredDependencies ();
         if (this.apiKey === undefined) {
             throw new ArgumentsRequired ('transfer requires this.apiKey');
@@ -911,7 +913,7 @@ module.exports = class bytetrade extends Exchange {
         await this.loadMarkets ();
         const currency = this.currency (code);
         const amountTruncate = this.decimalToPrecision (amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
-        const amountChain = this.toWei (amountTruncate, 'ether', currency['precision']['amount']);
+        const amountChain = this.toWei (amountTruncate, currency['precision']['amount']);
         const assetType = parseInt (currency['id']);
         const now = this.milliseconds ();
         const expiration = now;
@@ -928,7 +930,7 @@ module.exports = class bytetrade extends Exchange {
             this.numberToLE (1, 1),
             this.numberToLE (Math.floor (expiration / 1000), 4),
             this.numberToLE (1, 1),
-            this.numberToLE (0, 1),
+            this.numberToLE (28, 1),
             this.numberToLE (0, 8),
             this.numberToLE (feeAmount, 8),  // string for 32 bit php
             this.numberToLE (this.apiKey.length, 1),
@@ -938,6 +940,9 @@ module.exports = class bytetrade extends Exchange {
             this.numberToLE (assetType, 4),
             this.numberToLE (this.integerDivide (amountChain, eightBytes), 8),
             this.numberToLE (this.integerModulo (amountChain, eightBytes), 8),
+            this.numberToLE (1, 1),
+            this.numberToLE (message.length, 1),
+            this.stringToBinary (this.encode (message)),
             this.numberToLE (0, 1),
             this.numberToLE (1, 1),
             this.numberToLE (chainName.length, 1),
@@ -955,13 +960,14 @@ module.exports = class bytetrade extends Exchange {
             'to': address,
             'asset_type': parseInt (currency['id']),
             'amount': amountChain.toString (),
+            'message': message,
         };
         const fatty = {
             'timestamp': datetime,
             'expiration': expirationDatetime,
             'operations': [
                 [
-                    0,
+                    28,
                     operation,
                 ],
             ],
@@ -1183,7 +1189,7 @@ module.exports = class bytetrade extends Exchange {
         const currency = this.currency (code);
         const coinId = currency['id'];
         const amountTruncate = this.decimalToPrecision (amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
-        const amountChain = this.toWei (amountTruncate, 'ether', currency['info']['externalPrecision']);
+        const amountChain = this.toWei (amountTruncate, currency['info']['externalPrecision']);
         const eightBytes = this.integerPow ('2', '64');
         let assetFee = 0;
         let byteStringArray = [];
@@ -1281,7 +1287,7 @@ module.exports = class bytetrade extends Exchange {
             request = {
                 'chainType': chainId,
                 'trObj': this.json (fatty),
-                'chainContractAddresss': chainContractAddress,
+                'chainContractAddress': chainContractAddress,
             };
         } else {
             operation = {
@@ -1320,14 +1326,14 @@ module.exports = class bytetrade extends Exchange {
                     'chainType': chainId,
                     'toExternalAddress': 'noneed',
                     'trObj': this.json (fatty),
-                    'chainContractAddresss': chainContractAddress,
+                    'chainContractAddress': chainContractAddress,
                 };
             } else {
                 request = {
                     'chainType': chainId,
                     'toExternalAddress': address,
                     'trObj': this.json (fatty),
-                    'chainContractAddresss': chainContractAddress,
+                    'chainContractAddress': chainContractAddress,
                 };
             }
         }

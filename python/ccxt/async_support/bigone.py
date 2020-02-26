@@ -32,6 +32,7 @@ class bigone(Exchange):
                 'fetchDeposits': True,
                 'fetchMyTrades': True,
                 'fetchOHLCV': True,
+                'fetchOrder': True,
                 'fetchOrders': True,
                 'fetchOpenOrders': True,
                 'fetchClosedOrders': True,
@@ -53,7 +54,7 @@ class bigone(Exchange):
                 '1w': 'week1',
                 '1M': 'month1',
             },
-            'hostname': 'big.one',  # set to 'b1.run' for China mainland
+            'hostname': 'big.one',  # or 'bigone.com'
             'urls': {
                 'logo': 'https://user-images.githubusercontent.com/1294454/69354403-1d532180-0c91-11ea-88ed-44c06cefdf87.jpg',
                 'api': {
@@ -193,6 +194,7 @@ class bigone(Exchange):
                 'amount': self.safe_integer(market, 'base_scale'),
                 'price': self.safe_integer(market, 'quote_scale'),
             }
+            minCost = self.safe_integer(market, 'min_quote_value')
             entry = {
                 'id': id,
                 'uuid': uuid,
@@ -206,14 +208,14 @@ class bigone(Exchange):
                 'limits': {
                     'amount': {
                         'min': math.pow(10, -precision['amount']),
-                        'max': math.pow(10, precision['amount']),
+                        'max': None,
                     },
                     'price': {
                         'min': math.pow(10, -precision['price']),
-                        'max': math.pow(10, precision['price']),
+                        'max': None,
                     },
                     'cost': {
-                        'min': None,
+                        'min': minCost,
                         'max': None,
                     },
                 },

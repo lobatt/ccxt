@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
 
 class tidex extends Exchange {
 
@@ -286,7 +288,7 @@ class tidex extends Exchange {
         return $this->parse_order_book($orderbook);
     }
 
-    public function fetch_order_books ($symbols = null, $params = array ()) {
+    public function fetch_order_books ($symbols = null, $limit = null, $params = array ()) {
         $this->load_markets();
         $ids = null;
         if ($symbols === null) {
@@ -303,6 +305,9 @@ class tidex extends Exchange {
         $request = array(
             'pair' => $ids,
         );
+        if ($limit !== null) {
+            $request['limit'] = $limit; // default = 150, max = 2000
+        }
         $response = $this->publicGetDepthPair (array_merge($request, $params));
         $result = array();
         $ids = is_array($response) ? array_keys($response) : array();
@@ -333,6 +338,9 @@ class tidex extends Exchange {
         $symbol = null;
         if ($market !== null) {
             $symbol = $market['symbol'];
+            if (!$market['active']) {
+                $timestamp = null;
+            }
         }
         $last = $this->safe_float($ticker, 'last');
         return array(

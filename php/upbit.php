@@ -6,6 +6,9 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\AddressPending;
+use \ccxt\InvalidOrder;
 
 class upbit extends Exchange {
 
@@ -443,7 +446,7 @@ class upbit extends Exchange {
         return $base . '/' . $quote;
     }
 
-    public function fetch_order_books ($symbols = null, $params = array ()) {
+    public function fetch_order_books ($symbols = null, $limit = null, $params = array ()) {
         $this->load_markets();
         $ids = null;
         if ($symbols === null) {
@@ -506,7 +509,7 @@ class upbit extends Exchange {
     }
 
     public function fetch_order_book ($symbol, $limit = null, $params = array ()) {
-        $orderbooks = $this->fetch_order_books (array( $symbol ), $params);
+        $orderbooks = $this->fetch_order_books (array( $symbol ), $limit, $params);
         return $this->safe_value($orderbooks, $symbol);
     }
 
@@ -1395,7 +1398,8 @@ class upbit extends Exchange {
         $request = array(
             'currency' => $currency['id'],
         );
-        $response = $this->fetch_deposit_address ($code, array_merge($request, $params));
+        // https://github.com/ccxt/ccxt/issues/6452
+        $response = $this->privatePostDepositsGenerateCoinAddress (array_merge($request, $params));
         //
         // https://docs.upbit.com/v1.0/reference#%EC%9E%85%EA%B8%88-%EC%A3%BC%EC%86%8C-%EC%83%9D%EC%84%B1-%EC%9A%94%EC%B2%AD
         // can be any of the two responses:
@@ -1413,12 +1417,7 @@ class upbit extends Exchange {
         //
         $message = $this->safe_string($response, 'message');
         if ($message !== null) {
-            return array(
-                'currency' => $code,
-                'address' => null,
-                'tag' => null,
-                'info' => $response,
-            );
+            throw new AddressPending($this->id . ' is generating ' . $code . ' deposit address, call fetchDepositAddress or createDepositAddress one more time later to retrieve the generated address');
         }
         return $this->parse_deposit_address ($response);
     }

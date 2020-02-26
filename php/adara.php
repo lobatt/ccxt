@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\OrderNotFound;
 
 class adara extends Exchange {
 
@@ -19,7 +21,7 @@ class adara extends Exchange {
             'certified' => false,
             // new metainfo interface
             'has' => array(
-                'CORS' => true,
+                'CORS' => false,
                 'fetchCurrencies' => true,
                 'fetchOrderBooks' => false,
                 'createMarketOrder' => false,

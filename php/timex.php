@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\InvalidOrder;
 
 class timex extends Exchange {
 
@@ -163,7 +165,7 @@ class timex extends Exchange {
                     '401' => '\\ccxt\\AuthenticationError',
                     '403' => '\\ccxt\\PermissionDenied',
                     '404' => '\\ccxt\\OrderNotFound',
-                    '429' => '\\ccxt\\DDoSProtection',
+                    '429' => '\\ccxt\\RateLimitExceeded',
                     '500' => '\\ccxt\\ExchangeError',
                     '503' => '\\ccxt\\ExchangeNotAvailable',
                 ),
@@ -473,7 +475,7 @@ class timex extends Exchange {
             $expireIn = $this->safe_value($params, 'expireIn', $defaultExpireIn);
             if ($expireTime !== null) {
                 $request['expireTime'] = $expireTime;
-            } else if ($expireIn === null) {
+            } else if ($expireIn !== null) {
                 $request['expireIn'] = $expireIn;
             } else {
                 throw new InvalidOrder($this->id . ' createOrder method requires a $expireTime or $expireIn param for a ' . $type . ' $order, you can also set the $expireIn exchange-wide option');

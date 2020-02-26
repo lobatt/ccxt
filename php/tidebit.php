@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\OrderNotFound;
 
 class tidebit extends Exchange {
 
@@ -18,7 +20,7 @@ class tidebit extends Exchange {
             'version' => 'v2',
             'has' => array(
                 'fetchDepositAddress' => true,
-                'CORS' => true,
+                'CORS' => false,
                 'fetchTickers' => true,
                 'fetchOHLCV' => true,
                 'withdraw' => true,

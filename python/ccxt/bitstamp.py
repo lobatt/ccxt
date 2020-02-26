@@ -12,6 +12,7 @@ try:
 except NameError:
     basestring = str  # Python 2
 import math
+import json
 from ccxt.base.errors import ExchangeError
 from ccxt.base.errors import AuthenticationError
 from ccxt.base.errors import PermissionDenied
@@ -45,7 +46,11 @@ class bitstamp(Exchange):
             },
             'urls': {
                 'logo': 'https://user-images.githubusercontent.com/1294454/27786377-8c8ab57e-5fe9-11e7-8ea4-2b05b6bcceec.jpg',
-                'api': 'https://www.bitstamp.net/api',
+                'api': {
+                    'public': 'https://www.bitstamp.net/api',
+                    'private': 'https://www.bitstamp.net/api',
+                    'v1': 'https://www.bitstamp.net/api',
+                },
                 'www': 'https://www.bitstamp.net',
                 'doc': 'https://www.bitstamp.net/api',
             },
@@ -824,10 +829,9 @@ class bitstamp(Exchange):
         timestamp = self.parse8601(self.safe_string(order, 'datetime'))
         lastTradeTimestamp = None
         symbol = None
-        marketId = self.safe_string(order, 'currency_pair')
+        marketId = self.safe_string_lower(order, 'currency_pair')
         if marketId is not None:
             marketId = marketId.replace('/', '')
-            marketId = marketId.lower()
             if marketId in self.markets_by_id:
                 market = self.markets_by_id[marketId]
                 symbol = market['symbol']
@@ -948,6 +952,8 @@ class bitstamp(Exchange):
         method += 'Deposit' if v1 else ''
         method += 'Address'
         response = getattr(self, method)(params)
+        if v1:
+            response = json.loads(response)
         address = response if v1 else self.safe_string(response, 'address')
         tag = None if v1 else self.safe_string(response, 'destination_tag')
         self.check_address(address)
@@ -983,7 +989,7 @@ class bitstamp(Exchange):
         return self.milliseconds()
 
     def sign(self, path, api='public', method='GET', params={}, headers=None, body=None):
-        url = self.urls['api'] + '/'
+        url = self.urls['api'][api] + '/'
         if api != 'v1':
             url += self.version + '/'
         url += self.implode_params(path, params)

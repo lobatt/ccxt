@@ -6,6 +6,9 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
+use \ccxt\NotSupported;
 
 class bitfinex extends Exchange {
 
@@ -274,6 +277,7 @@ class bitfinex extends Exchange {
                     ),
                 ),
             ),
+            // todo rewrite for https://api-pub.bitfinex.com//v2/conf/pub:map:tx:method
             'commonCurrencies' => array(
                 'ABS' => 'ABYSS',
                 'AIO' => 'AION',
@@ -309,7 +313,9 @@ class bitfinex extends Exchange {
                 'UST' => 'USDT',
                 'UTN' => 'UTNP',
                 'VSY' => 'VSYS',
+                'WAX' => 'WAXP',
                 'XCH' => 'XCHF',
+                'ZBT' => 'ZB',
             ),
             'exceptions' => array(
                 'exact' => array(
@@ -411,7 +417,7 @@ class bitfinex extends Exchange {
                     'YOYOW' => 'yoyow',
                     'ZEC' => 'zcash',
                     'ZRX' => 'zrx',
-                    'XTZ' => 'tezos',
+                    'XTZ' => 'xtz',
                 ),
                 'orderTypes' => array(
                     'limit' => 'exchange limit',
@@ -543,11 +549,19 @@ class bitfinex extends Exchange {
         } else {
             $key = 'base';
         }
+        $code = $market[$key];
+        $currency = $this->safe_value($this->currencies, $code);
+        if ($currency !== null) {
+            $precision = $this->safe_integer($currency, 'precision');
+            if ($precision !== null) {
+                $cost = floatval ($this->currency_to_precision($code, $cost));
+            }
+        }
         return array(
             'type' => $takerOrMaker,
             'currency' => $market[$key],
             'rate' => $rate,
-            'cost' => floatval ($this->currency_to_precision($market[$key], $cost)),
+            'cost' => $cost,
         );
     }
 
@@ -618,22 +632,23 @@ class bitfinex extends Exchange {
         if ($timestamp !== null) {
             $timestamp *= 1000;
         }
+        $timestamp = intval ($timestamp);
         $symbol = null;
         if ($market !== null) {
             $symbol = $market['symbol'];
         } else if (is_array($ticker) && array_key_exists('pair', $ticker)) {
             $marketId = $this->safe_string($ticker, 'pair');
-            if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
-                $market = $this->markets_by_id[$marketId];
-            }
-            if ($market !== null) {
-                $symbol = $market['symbol'];
-            } else {
-                $baseId = mb_substr($marketId, 0, 3 - 0);
-                $quoteId = mb_substr($marketId, 3, 6 - 3);
-                $base = $this->safe_currency_code($baseId);
-                $quote = $this->safe_currency_code($quoteId);
-                $symbol = $base . '/' . $quote;
+            if ($marketId !== null) {
+                if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
+                    $market = $this->markets_by_id[$marketId];
+                    $symbol = $market['symbol'];
+                } else {
+                    $baseId = mb_substr($marketId, 0, 3 - 0);
+                    $quoteId = mb_substr($marketId, 3, 6 - 3);
+                    $base = $this->safe_currency_code($baseId);
+                    $quote = $this->safe_currency_code($quoteId);
+                    $symbol = $base . '/' . $quote;
+                }
             }
         }
         $last = $this->safe_float($ticker, 'last_price');
@@ -808,9 +823,8 @@ class bitfinex extends Exchange {
         }
         $symbol = null;
         if ($market === null) {
-            $marketId = $this->safe_string($order, 'symbol');
+            $marketId = $this->safe_string_upper($order, 'symbol');
             if ($marketId !== null) {
-                $marketId = strtoupper($marketId);
                 if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
                     $market = $this->markets_by_id[$marketId];
                 }
@@ -920,6 +934,7 @@ class bitfinex extends Exchange {
     }
 
     public function get_currency_name ($code) {
+        // todo rewrite for https://api-pub.bitfinex.com//v2/conf/pub:map:tx:method
         if (is_array($this->options['currencyNames']) && array_key_exists($code, $this->options['currencyNames'])) {
             return $this->options['currencyNames'][$code];
         }
@@ -932,18 +947,12 @@ class bitfinex extends Exchange {
             'renew' => 1,
         );
         $response = $this->fetch_deposit_address ($code, array_merge($request, $params));
-        $address = $this->safe_string($response, 'address');
-        $this->check_address($address);
-        return array(
-            'info' => $response['info'],
-            'currency' => $code,
-            'address' => $address,
-            'tag' => null,
-        );
+        return $response;
     }
 
     public function fetch_deposit_address ($code, $params = array ()) {
         $this->load_markets();
+        // todo rewrite for https://api-pub.bitfinex.com//v2/conf/pub:map:tx:method
         $name = $this->get_currency_name ($code);
         $request = array(
             'method' => $name,
@@ -1085,11 +1094,13 @@ class bitfinex extends Exchange {
 
     public function withdraw ($code, $amount, $address, $tag = null, $params = array ()) {
         $this->check_address($address);
+        $this->load_markets();
+        // todo rewrite for https://api-pub.bitfinex.com//v2/conf/pub:map:tx:method
         $name = $this->get_currency_name ($code);
         $request = array(
             'withdraw_type' => $name,
             'walletselected' => 'exchange',
-            'amount' => (string) $amount,
+            'amount' => $this->number_to_string($amount),
             'address' => $address,
         );
         if ($tag !== null) {

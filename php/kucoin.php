@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
 
 class kucoin extends Exchange {
 
@@ -16,9 +18,11 @@ class kucoin extends Exchange {
             'countries' => array( 'SC' ),
             'rateLimit' => 334,
             'version' => 'v2',
-            'certified' => true,
+            'certified' => false,
             'comment' => 'Platform 2.0',
             'has' => array(
+                'CORS' => false,
+                'fetchTime' => true,
                 'fetchMarkets' => true,
                 'fetchCurrencies' => true,
                 'fetchTicker' => true,
@@ -70,6 +74,10 @@ class kucoin extends Exchange {
                         'symbols',
                         'market/allTickers',
                         'market/orderbook/level{level}',
+                        'market/orderbook/level2',
+                        'market/orderbook/level2_20',
+                        'market/orderbook/level2_100',
+                        'market/orderbook/level3',
                         'market/histories',
                         'market/candles',
                         'market/stats',
@@ -101,6 +109,7 @@ class kucoin extends Exchange {
                     'post' => array(
                         'accounts',
                         'accounts/inner-transfer',
+                        'accounts/sub-transfer',
                         'deposit-addresses',
                         'withdrawals',
                         'orders',
@@ -128,37 +137,42 @@ class kucoin extends Exchange {
                 '1w' => '1week',
             ),
             'exceptions' => array(
-                'order not exist' => '\\ccxt\\OrderNotFound',
-                'order not exist.' => '\\ccxt\\OrderNotFound', // duplicated error temporarily
-                'order_not_exist' => '\\ccxt\\OrderNotFound', // array("code":"order_not_exist","msg":"order_not_exist") ¯\_(ツ)_/¯
-                'order_not_exist_or_not_allow_to_cancel' => '\\ccxt\\InvalidOrder', // array("code":"400100","msg":"order_not_exist_or_not_allow_to_cancel")
-                'Order size below the minimum requirement.' => '\\ccxt\\InvalidOrder', // array("code":"400100","msg":"Order size below the minimum requirement.")
-                'The withdrawal amount is below the minimum requirement.' => '\\ccxt\\ExchangeError', // array("code":"400100","msg":"The withdrawal amount is below the minimum requirement.")
-                '400' => '\\ccxt\\BadRequest',
-                '401' => '\\ccxt\\AuthenticationError',
-                '403' => '\\ccxt\\NotSupported',
-                '404' => '\\ccxt\\NotSupported',
-                '405' => '\\ccxt\\NotSupported',
-                '429' => '\\ccxt\\DDoSProtection',
-                '500' => '\\ccxt\\ExchangeError',
-                '503' => '\\ccxt\\ExchangeNotAvailable',
-                '200004' => '\\ccxt\\InsufficientFunds',
-                '230003' => '\\ccxt\\InsufficientFunds', // array("code":"230003","msg":"Balance insufficient!")
-                '260100' => '\\ccxt\\InsufficientFunds', // array("code":"260100","msg":"account.noBalance")
-                '300000' => '\\ccxt\\InvalidOrder',
-                '400000' => '\\ccxt\\BadSymbol',
-                '400001' => '\\ccxt\\AuthenticationError',
-                '400002' => '\\ccxt\\InvalidNonce',
-                '400003' => '\\ccxt\\AuthenticationError',
-                '400004' => '\\ccxt\\AuthenticationError',
-                '400005' => '\\ccxt\\AuthenticationError',
-                '400006' => '\\ccxt\\AuthenticationError',
-                '400007' => '\\ccxt\\AuthenticationError',
-                '400008' => '\\ccxt\\NotSupported',
-                '400100' => '\\ccxt\\BadRequest',
-                '411100' => '\\ccxt\\AccountSuspended',
-                '415000' => '\\ccxt\\BadRequest', // array("code":"415000","msg":"Unsupported Media Type")
-                '500000' => '\\ccxt\\ExchangeError',
+                'exact' => array(
+                    'order not exist' => '\\ccxt\\OrderNotFound',
+                    'order not exist.' => '\\ccxt\\OrderNotFound', // duplicated error temporarily
+                    'order_not_exist' => '\\ccxt\\OrderNotFound', // array("code":"order_not_exist","msg":"order_not_exist") ¯\_(ツ)_/¯
+                    'order_not_exist_or_not_allow_to_cancel' => '\\ccxt\\InvalidOrder', // array("code":"400100","msg":"order_not_exist_or_not_allow_to_cancel")
+                    'Order size below the minimum requirement.' => '\\ccxt\\InvalidOrder', // array("code":"400100","msg":"Order size below the minimum requirement.")
+                    'The withdrawal amount is below the minimum requirement.' => '\\ccxt\\ExchangeError', // array("code":"400100","msg":"The withdrawal amount is below the minimum requirement.")
+                    '400' => '\\ccxt\\BadRequest',
+                    '401' => '\\ccxt\\AuthenticationError',
+                    '403' => '\\ccxt\\NotSupported',
+                    '404' => '\\ccxt\\NotSupported',
+                    '405' => '\\ccxt\\NotSupported',
+                    '429' => '\\ccxt\\RateLimitExceeded',
+                    '500' => '\\ccxt\\ExchangeError',
+                    '503' => '\\ccxt\\ExchangeNotAvailable',
+                    '200004' => '\\ccxt\\InsufficientFunds',
+                    '230003' => '\\ccxt\\InsufficientFunds', // array("code":"230003","msg":"Balance insufficient!")
+                    '260100' => '\\ccxt\\InsufficientFunds', // array("code":"260100","msg":"account.noBalance")
+                    '300000' => '\\ccxt\\InvalidOrder',
+                    '400000' => '\\ccxt\\BadSymbol',
+                    '400001' => '\\ccxt\\AuthenticationError',
+                    '400002' => '\\ccxt\\InvalidNonce',
+                    '400003' => '\\ccxt\\AuthenticationError',
+                    '400004' => '\\ccxt\\AuthenticationError',
+                    '400005' => '\\ccxt\\AuthenticationError',
+                    '400006' => '\\ccxt\\AuthenticationError',
+                    '400007' => '\\ccxt\\AuthenticationError',
+                    '400008' => '\\ccxt\\NotSupported',
+                    '400100' => '\\ccxt\\BadRequest',
+                    '411100' => '\\ccxt\\AccountSuspended',
+                    '415000' => '\\ccxt\\BadRequest', // array("code":"415000","msg":"Unsupported Media Type")
+                    '500000' => '\\ccxt\\ExchangeError',
+                ),
+                'broad' => array(
+                    'Exceeded the access frequency' => '\\ccxt\\RateLimitExceeded',
+                ),
             ),
             'fees' => array(
                 'trading' => array(
@@ -177,6 +191,7 @@ class kucoin extends Exchange {
             'commonCurrencies' => array(
                 'HOT' => 'HOTNOW',
                 'EDGE' => 'DADI', // https://github.com/ccxt/ccxt/issues/5756
+                'WAX' => 'WAXP',
             ),
             'options' => array(
                 'version' => 'v1',
@@ -184,6 +199,23 @@ class kucoin extends Exchange {
                 'fetchMyTradesMethod' => 'private_get_fills',
                 'fetchBalance' => array(
                     'type' => 'trade', // or 'main'
+                ),
+                // endpoint versions
+                'versions' => array(
+                    'public' => array(
+                        'GET' => array(
+                            'market/orderbook/level{level}' => 'v1',
+                            'market/orderbook/level2' => 'v2',
+                            'market/orderbook/level2_20' => 'v1',
+                            'market/orderbook/level2_100' => 'v1',
+                        ),
+                    ),
+                    'private' => array(
+                        'POST' => array(
+                            'accounts/inner-transfer' => 'v2',
+                            'accounts/sub-transfer' => 'v2',
+                        ),
+                    ),
                 ),
             ),
         ));
@@ -199,6 +231,18 @@ class kucoin extends Exchange {
         $kucoinTime = $this->safe_integer($response, 'data');
         $this->options['timeDifference'] = intval ($after - $kucoinTime);
         return $this->options['timeDifference'];
+    }
+
+    public function fetch_time ($params = array ()) {
+        $response = $this->publicGetTimestamp ($params);
+        //
+        //     {
+        //         "code":"200000",
+        //         "msg":"success",
+        //         "data":1546837113087
+        //     }
+        //
+        return $this->safe_integer($response, 'data');
     }
 
     public function fetch_markets ($params = array ()) {
@@ -351,24 +395,47 @@ class kucoin extends Exchange {
     public function parse_ticker ($ticker, $market = null) {
         //
         //     {
-        //         'buy' => '0.00001168',
-        //         'changePrice' => '-0.00000018',
-        //         'changeRate' => '-0.0151',
-        //         'datetime' => 1550661146316,
-        //         'high' => '0.0000123',
-        //         'last' => '0.00001169',
-        //         'low' => '0.00001159',
-        //         'sell' => '0.00001182',
-        //         'symbol' => 'LOOM-BTC',
-        //         'vol' => '44399.5669'
+        //         $symbol => "ETH-BTC",
+        //         high => "0.019518",
+        //         vol => "7997.82836194",
+        //         $last => "0.019329",
+        //         low => "0.019",
+        //         buy => "0.019329",
+        //         sell => "0.01933",
+        //         changePrice => "-0.000139",
+        //         time =>  1580553706304,
+        //         averagePrice => "0.01926386",
+        //         changeRate => "-0.0071",
+        //         volValue => "154.40791568183474"
+        //     }
+        //
+        //     {
+        //         "trading" => true,
+        //         "$symbol" => "KCS-BTC",
+        //         "buy" => 0.00011,
+        //         "sell" => 0.00012,
+        //         "sort" => 100,
+        //         "volValue" => 3.13851792584,   //total
+        //         "baseCurrency" => "KCS",
+        //         "$market" => "BTC",
+        //         "quoteCurrency" => "BTC",
+        //         "symbolCode" => "KCS-BTC",
+        //         "datetime" => 1548388122031,
+        //         "high" => 0.00013,
+        //         "vol" => 27514.34842,
+        //         "low" => 0.0001,
+        //         "changePrice" => -1.0e-5,
+        //         "changeRate" => -0.0769,
+        //         "lastTradedPrice" => 0.00012,
+        //         "board" => 0,
+        //         "mark" => 0
         //     }
         //
         $percentage = $this->safe_float($ticker, 'changeRate');
         if ($percentage !== null) {
             $percentage = $percentage * 100;
         }
-        $last = $this->safe_float($ticker, 'last');
-        $average = $this->safe_float($ticker, 'averagePrice');
+        $last = $this->safe_float_2($ticker, 'last', 'lastTradedPrice');
         $symbol = null;
         $marketId = $this->safe_string($ticker, 'symbol');
         if ($marketId !== null) {
@@ -387,10 +454,11 @@ class kucoin extends Exchange {
                 $symbol = $market['symbol'];
             }
         }
+        $timestamp = $this->safe_integer_2($ticker, 'time', 'datetime');
         return array(
             'symbol' => $symbol,
-            'timestamp' => null,
-            'datetime' => null,
+            'timestamp' => $timestamp,
+            'datetime' => $this->iso8601 ($timestamp),
             'high' => $this->safe_float($ticker, 'high'),
             'low' => $this->safe_float($ticker, 'low'),
             'bid' => $this->safe_float($ticker, 'buy'),
@@ -404,7 +472,7 @@ class kucoin extends Exchange {
             'previousClose' => null,
             'change' => $this->safe_float($ticker, 'changePrice'),
             'percentage' => $percentage,
-            'average' => $average,
+            'average' => $this->safe_float($ticker, 'averagePrice'),
             'baseVolume' => $this->safe_float($ticker, 'vol'),
             'quoteVolume' => $this->safe_float($ticker, 'volValue'),
             'info' => $ticker,
@@ -573,9 +641,16 @@ class kucoin extends Exchange {
     }
 
     public function fetch_order_book ($symbol, $limit = null, $params = array ()) {
+        $level = '2';
+        if ($limit !== null) {
+            if (($limit !== 20) && ($limit !== 100)) {
+                throw new ExchangeError($this->id . ' fetchOrderBook $limit argument must be null, 20 or 100');
+            }
+            $level .= '_' . (string) $limit;
+        }
         $this->load_markets();
         $marketId = $this->market_id($symbol);
-        $request = array_merge(array( 'symbol' => $marketId, 'level' => 2 ), $params);
+        $request = array_merge(array( 'symbol' => $marketId, 'level' => $level ), $params);
         $response = $this->publicGetMarketOrderbookLevelLevel ($request);
         //
         // { sequence => '1547731421688',
@@ -587,8 +662,8 @@ class kucoin extends Exchange {
         // $level can be a string such as 2_20 or 2_100
         $levelString = $this->safe_string($request, 'level');
         $levelParts = explode('_', $levelString);
-        $level = intval ($levelParts[0]);
-        $orderbook = $this->parse_order_book($data, $timestamp, 'bids', 'asks', $level - 2, $level - 1);
+        $offset = intval ($levelParts[0]);
+        $orderbook = $this->parse_order_book($data, $timestamp, 'bids', 'asks', $offset - 2, $offset - 1);
         $orderbook['nonce'] = $this->safe_integer($data, 'sequence');
         return $orderbook;
     }
@@ -971,6 +1046,19 @@ class kucoin extends Exchange {
         //         "time":1548848575203567174
         //     }
         //
+        //     {
+        //         sequence => '1568787654360',
+        //         $symbol => 'BTC-USDT',
+        //         $side => 'buy',
+        //         size => '0.00536577',
+        //         $price => '9345',
+        //         takerOrderId => '5e356c4a9f1a790008f8d921',
+        //         time => '1580559434436443257',
+        //         $type => 'match',
+        //         makerOrderId => '5e356bffedf0010008fa5d7f',
+        //         tradeId => '5e356c4aeefabd62c62a1ece'
+        //     }
+        //
         // fetchMyTrades (private) v2
         //
         //     {
@@ -1042,9 +1130,6 @@ class kucoin extends Exchange {
             }
         }
         $id = $this->safe_string_2($trade, 'tradeId', 'id');
-        if ($id !== null) {
-            $id = (string) $id;
-        }
         $orderId = $this->safe_string($trade, 'orderId');
         $takerOrMaker = $this->safe_string($trade, 'liquidity');
         $amount = $this->safe_float_2($trade, 'size', 'amount');
@@ -1554,7 +1639,11 @@ class kucoin extends Exchange {
         // the v2 URL is https://openapi-v2.kucoin.com/api/v1/endpoint
         //                                †                 ↑
         //
-        $version = $this->safe_string($params, 'version', $this->options['version']);
+        $versions = $this->safe_value($this->options, 'versions', array());
+        $apiVersions = $this->safe_value($versions, $api);
+        $methodVersions = $this->safe_value($apiVersions, $method, array());
+        $defaultVersion = $this->safe_string($methodVersions, $path, $this->options['version']);
+        $version = $this->safe_string($params, 'version', $defaultVersion);
         $params = $this->omit ($params, 'version');
         $endpoint = '/api/' . $version . '/' . $this->implode_params($path, $params);
         $query = $this->omit ($params, $this->extract_params($path));
@@ -1587,6 +1676,7 @@ class kucoin extends Exchange {
 
     public function handle_errors ($code, $reason, $url, $method, $headers, $body, $response, $requestHeaders, $requestBody) {
         if (!$response) {
+            $this->throw_broadly_matched_exception($this->exceptions['broad'], $body, $body);
             return;
         }
         //
@@ -1597,7 +1687,7 @@ class kucoin extends Exchange {
         //
         $errorCode = $this->safe_string($response, 'code');
         $message = $this->safe_string($response, 'msg');
-        $this->throw_exactly_matched_exception($this->exceptions, $message, $message);
-        $this->throw_exactly_matched_exception($this->exceptions, $errorCode, $message);
+        $this->throw_exactly_matched_exception($this->exceptions['exact'], $message, $message);
+        $this->throw_exactly_matched_exception($this->exceptions['exact'], $errorCode, $message);
     }
 }

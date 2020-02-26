@@ -37,9 +37,15 @@ module.exports = class bitmex extends Exchange {
                 '1d': '1d',
             },
             'urls': {
-                'test': 'https://testnet.bitmex.com',
+                'test': {
+                    'public': 'https://testnet.bitmex.com',
+                    'private': 'https://testnet.bitmex.com',
+                },
                 'logo': 'https://user-images.githubusercontent.com/1294454/27766319-f653c6e6-5ed4-11e7-933d-f0bc3699ae8f.jpg',
-                'api': 'https://www.bitmex.com',
+                'api': {
+                    'public': 'https://www.bitmex.com',
+                    'private': 'https://www.bitmex.com',
+                },
                 'www': 'https://www.bitmex.com',
                 'doc': [
                     'https://www.bitmex.com/app/apiOverview',
@@ -1205,7 +1211,15 @@ module.exports = class bitmex extends Exchange {
 
     async cancelOrder (id, symbol = undefined, params = {}) {
         await this.loadMarkets ();
-        const response = await this.privateDeleteOrder (this.extend ({ 'orderID': id }, params));
+        // https://github.com/ccxt/ccxt/issues/6507
+        const clOrdID = this.safeValue (params, 'clOrdID');
+        const request = {};
+        if (clOrdID === undefined) {
+            request['orderID'] = id;
+        } else {
+            request['clOrdID'] = clOrdID;
+        }
+        const response = await this.privateDeleteOrder (this.extend (request, params));
         let order = response[0];
         const error = this.safeString (order, 'error');
         if (error !== undefined) {
@@ -1286,7 +1300,7 @@ module.exports = class bitmex extends Exchange {
                 params = this.omit (params, '_format');
             }
         }
-        const url = this.urls['api'] + query;
+        const url = this.urls['api'][api] + query;
         if (this.apiKey && this.secret) {
             let auth = method + query;
             let expires = this.safeInteger (this.options, 'api-expires');

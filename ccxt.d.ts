@@ -7,63 +7,39 @@ declare module 'ccxt' {
         [key: string]: T;
     }
 
-    // error.js -----------------------------------------
+    // errors.js -----------------------------------------
 
     export class BaseError extends Error {
         constructor(message: string);
     }
 
-    export class ExchangeError extends BaseError {
-        constructor(message: string);
-    }
-
-    export class NotSupported extends ExchangeError {
-        constructor(message: string);
-    }
-
-    export class AuthenticationError extends ExchangeError {
-        constructor(message: string);
-    }
-
-    export class InvalidNonce extends ExchangeError {
-        constructor(message: string);
-    }
-
-    export class InsufficientFunds extends ExchangeError {
-        constructor(message: string);
-    }
-
-    export class InvalidOrder extends ExchangeError {
-        constructor(message: string);
-    }
-
-    export class OrderNotFound extends InvalidOrder {
-        constructor(message: string);
-    }
-
-    export class OrderNotCached extends InvalidOrder {
-        constructor(message: string);
-    }
-
-    export class CancelPending extends InvalidOrder {
-        constructor(message: string);
-    }
-
-    export class NetworkError extends BaseError {
-        constructor(message: string);
-    }
-
-    export class DDoSProtection extends NetworkError {
-        constructor(message: string);
-    }
-
-    export class RequestTimeout extends NetworkError {
-        constructor(message: string);
-    }
-
-    export class ExchangeNotAvailable extends NetworkError {
-        constructor(message: string);
-    }
+    export class ExchangeError extends BaseError {}
+    export class AuthenticationError extends ExchangeError {}
+    export class PermissionDenied extends AuthenticationError {}
+    export class AccountSuspended extends AuthenticationError {}
+    export class ArgumentsRequired extends ExchangeError {}
+    export class BadRequest extends ExchangeError {}
+    export class BadSymbol extends BadRequest {}
+    export class BadResponse extends ExchangeError {}
+    export class NullResponse extends BadResponse {}
+    export class InsufficientFunds extends ExchangeError {}
+    export class InvalidAddress extends ExchangeError {}
+    export class AddressPending extends InvalidAddress {}
+    export class InvalidOrder extends ExchangeError {}
+    export class OrderNotFound extends InvalidOrder {}
+    export class OrderNotCached extends InvalidOrder {}
+    export class CancelPending extends InvalidOrder {}
+    export class OrderImmediatelyFillable extends InvalidOrder {}
+    export class OrderNotFillable extends InvalidOrder {}
+    export class DuplicateOrderId extends InvalidOrder {}
+    export class NotSupported extends ExchangeError {}
+    export class NetworkError extends BaseError {}
+    export class DDoSProtection extends NetworkError {}
+    export class RateLimitExceeded extends DDoSProtection {}
+    export class ExchangeNotAvailable extends NetworkError {}
+    export class OnMaintenance extends ExchangeNotAvailable {}
+    export class InvalidNonce extends NetworkError {}
+    export class RequestTimeout extends NetworkError {}
 
     // -----------------------------------------------
 
@@ -102,6 +78,7 @@ declare module 'ccxt' {
         type: 'market' | 'limit';
         side: 'buy' | 'sell';
         price: number;
+        average?: number;
         amount: number;
         filled: number;
         remaining: number;
@@ -180,6 +157,8 @@ declare module 'ccxt' {
     export interface Currency {
         id: string;
         code: string;
+        numericId?: number;
+        precision: number;
     }
 
     export interface Balance {
@@ -453,7 +432,6 @@ declare module 'ccxt' {
     export class _1btcxe extends Exchange {}
     export class acx extends Exchange {}
     export class adara extends Exchange {}
-    export class allcoin extends okcoinusd {}
     export class anxpro extends Exchange {}
     export class bcex extends Exchange {}
     export class bequant extends hitbtc2 {}
@@ -481,7 +459,7 @@ declare module 'ccxt' {
     export class bittrex extends Exchange {}
     export class bitz extends Exchange {}
     export class bl3p extends Exchange {}
-    export class bleutrade extends bittrex {}
+    export class bleutrade extends Exchange {}
     export class braziliex extends Exchange {}
     export class btcalpha extends Exchange {}
     export class btcbox extends Exchange {}
@@ -545,7 +523,6 @@ declare module 'ccxt' {
     export class livecoin extends Exchange {}
     export class luno extends Exchange {}
     export class lykke extends Exchange {}
-    export class mandala extends Exchange {}
     export class mercado extends Exchange {}
     export class mixcoins extends Exchange {}
     export class mxc extends Exchange {}
@@ -566,10 +543,10 @@ declare module 'ccxt' {
     export class tidebit extends Exchange {}
     export class tidex extends Exchange {}
     export class timex extends Exchange {}
+    export class topq extends bw {}
     export class upbit extends Exchange {}
     export class vaultoro extends Exchange {}
     export class vbtc extends foxbit {}
-    export class virwox extends Exchange {}
     export class whitebit extends Exchange {}
     export class xbtce extends Exchange {}
     export class yobit extends Exchange {}

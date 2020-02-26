@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
 
 class btctradeua extends Exchange {
 
@@ -16,7 +18,7 @@ class btctradeua extends Exchange {
             'countries' => array( 'UA' ), // Ukraine,
             'rateLimit' => 3000,
             'has' => array(
-                'CORS' => true,
+                'CORS' => false,
                 'createMarketOrder' => false,
                 'fetchOpenOrders' => true,
             ),

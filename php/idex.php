@@ -6,6 +6,8 @@ namespace ccxt;
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 use Exception; // a common import
+use \ccxt\ExchangeError;
+use \ccxt\ArgumentsRequired;
 
 class idex extends Exchange {
 
@@ -100,6 +102,8 @@ class idex extends Exchange {
             'commonCurrencies' => array(
                 'ONE' => 'Menlo One',
                 'FT' => 'Fabric Token',
+                'PLA' => 'PlayChip',
+                'WAX' => 'WAXP',
             ),
         ));
     }
@@ -253,7 +257,7 @@ class idex extends Exchange {
             $ticker = $response[$id];
             $result[$symbol] = $this->parse_ticker($ticker, $market);
         }
-        return $result;
+        return $this->filter_by_array($result, 'symbol', $symbols);
     }
 
     public function fetch_ticker ($symbol, $params = array ()) {
@@ -383,13 +387,13 @@ class idex extends Exchange {
             if ($side === 'buy') {
                 $tokenBuy = $market['baseId'];
                 $tokenSell = $market['quoteId'];
-                $amountBuy = $this->toWei ($amount, 'ether', $market['precision']['amount']);
-                $amountSell = $this->toWei ($quoteAmount, 'ether', 18);
+                $amountBuy = $this->toWei ($amount, $market['precision']['amount']);
+                $amountSell = $this->toWei ($quoteAmount, 18);
             } else {
                 $tokenBuy = $market['quoteId'];
                 $tokenSell = $market['baseId'];
-                $amountBuy = $this->toWei ($quoteAmount, 'ether', 18);
-                $amountSell = $this->toWei ($amount, 'ether', $market['precision']['amount']);
+                $amountBuy = $this->toWei ($quoteAmount, 18);
+                $amountSell = $this->toWei ($amount, $market['precision']['amount']);
             }
             $nonce = $this->get_nonce ();
             $orderToHash = array(
@@ -989,7 +993,7 @@ class idex extends Exchange {
         $currency = $this->currency ($code);
         $tokenAddress = $currency['id'];
         $nonce = $this->get_nonce ();
-        $amount = $this->toWei ($amount, 'ether', $currency['precision']);
+        $amount = $this->toWei ($amount, $currency['precision']);
         $requestToHash = array(
             'contractAddress' => $this->get_contract_address (),
             'token' => $tokenAddress,

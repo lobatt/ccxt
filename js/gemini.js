@@ -3,7 +3,7 @@
 //  ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError, ArgumentsRequired, BadRequest, OrderNotFound, InvalidOrder, InvalidNonce, DDoSProtection, InsufficientFunds, AuthenticationError, ExchangeNotAvailable, PermissionDenied, NotSupported, OnMaintenance } = require ('./base/errors');
+const { ExchangeError, ArgumentsRequired, BadRequest, OrderNotFound, InvalidOrder, InvalidNonce, InsufficientFunds, AuthenticationError, PermissionDenied, NotSupported, OnMaintenance, RateLimitExceeded } = require ('./base/errors');
 
 //  ---------------------------------------------------------------------------
 
@@ -45,7 +45,11 @@ module.exports = class gemini extends Exchange {
                     'https://docs.gemini.com/rest-api',
                     'https://docs.sandbox.gemini.com',
                 ],
-                'test': 'https://api.sandbox.gemini.com',
+                'test': {
+                    'public': 'https://api.sandbox.gemini.com',
+                    'private': 'https://api.sandbox.gemini.com',
+                    'web': 'https://docs.sandbox.gemini.com',
+                },
                 'fees': [
                     'https://gemini.com/api-fee-schedule',
                     'https://gemini.com/trading-fees',
@@ -101,10 +105,10 @@ module.exports = class gemini extends Exchange {
                 '403': PermissionDenied, // The API key is missing the role necessary to access this private API endpoint
                 '404': OrderNotFound, // Unknown API entry point or Order not found
                 '406': InsufficientFunds, // Insufficient Funds
-                '429': DDoSProtection, // Rate Limiting was applied
+                '429': RateLimitExceeded, // Rate Limiting was applied
                 '500': ExchangeError, // The server encountered an error
                 '502': ExchangeError, // Technical issues are preventing the request from being satisfied
-                '503': ExchangeNotAvailable, // The exchange is down for maintenance
+                '503': OnMaintenance, // The exchange is down for maintenance
             },
             'timeframes': {
                 '1m': '1m',
@@ -134,7 +138,7 @@ module.exports = class gemini extends Exchange {
                     'InvalidSignature': AuthenticationError, // The signature did not match the expected signature
                     'InvalidSymbol': BadRequest, // An invalid symbol was specified
                     'InvalidTimestampInPayload': BadRequest, // The JSON payload contained a timestamp parameter with an unsupported value.
-                    'Maintenance': ExchangeNotAvailable, // The system is down for maintenance
+                    'Maintenance': OnMaintenance, // The system is down for maintenance
                     'MarketNotOpen': InvalidOrder, // The order was rejected because the market is not accepting new orders
                     'MissingApikeyHeader': AuthenticationError, // The X-GEMINI-APIKEY header was missing
                     'MissingOrderField': InvalidOrder, // A required order_id field was not specified
@@ -144,7 +148,7 @@ module.exports = class gemini extends Exchange {
                     'NoSSL': AuthenticationError, // You must use HTTPS to access the API
                     'OptionsMustBeArray': BadRequest, // The options parameter must be an array.
                     'OrderNotFound': OrderNotFound, // The order specified was not found
-                    'RateLimit': DDoSProtection, // Requests were made too frequently. See Rate Limits below.
+                    'RateLimit': RateLimitExceeded, // Requests were made too frequently. See Rate Limits below.
                     'System': ExchangeError, // We are experiencing technical issues
                     'UnsupportedOption': BadRequest, // This order execution option is not supported.
                 },
