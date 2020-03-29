@@ -224,14 +224,14 @@ class mxc(Exchange):
         await self.load_markets()
         market = self.market(symbol)
         now = self.milliseconds()
+        periodDurationInSeconds = self.parse_timeframe(timeframe)
         request = {
             'market': self.market_id(symbol),
-            'interval': self.timeframes[timeframe],
-            'startTime': now / 1000,
+            'interval': timeframe,
+            'startTime': int(now - periodDurationInSeconds / 1000),
         }
         # max limit = 1001
         if limit is not None:
-            periodDurationInSeconds = self.parse_timeframe(timeframe)
             hours = int((periodDurationInSeconds * limit) / 3600)
             request['range_hour'] = max(0, hours - 1)
         if since is not None:

@@ -230,14 +230,14 @@ module.exports = class mxc extends Exchange {
         await this.loadMarkets ();
         const market = this.market (symbol);
         const now = this.milliseconds ();
+        const periodDurationInSeconds = this.parseTimeframe (timeframe);
         const request = {
             'market': this.marketId (symbol),
             'interval': timeframe,
-            'startTime': parseInt(now / 1000),
+            'startTime': parseInt (now - periodDurationInSeconds / 1000),
         };
         // max limit = 1001
         if (limit !== undefined) {
-            const periodDurationInSeconds = this.parseTimeframe (timeframe);
             const hours = parseInt ((periodDurationInSeconds * limit) / 3600);
             request['range_hour'] = Math.max (0, hours - 1);
         }
