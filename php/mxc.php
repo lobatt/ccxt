@@ -231,14 +231,14 @@ class mxc extends Exchange {
         $this->load_markets();
         $market = $this->market ($symbol);
         $now = $this->milliseconds ();
+        $periodDurationInSeconds = $this->parse_timeframe($timeframe);
         $request = array(
             'market' => $this->market_id($symbol),
-            'interval' => $this->timeframes[$timeframe],
-            'startTime' => $now / 1000,
+            'interval' => $timeframe,
+            'startTime' => intval ($now - $periodDurationInSeconds / 1000),
         );
         // max $limit = 1001
         if ($limit !== null) {
-            $periodDurationInSeconds = $this->parse_timeframe($timeframe);
             $hours = intval (($periodDurationInSeconds * $limit) / 3600);
             $request['range_hour'] = max (0, $hours - 1);
         }
