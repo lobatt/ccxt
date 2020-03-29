@@ -232,8 +232,8 @@ module.exports = class mxc extends Exchange {
         const now = this.milliseconds ();
         const request = {
             'market': this.marketId (symbol),
-            'interval': this.timeframes[timeframe],
-            'startTime': now / 1000,
+            'interval': timeframe,
+            'startTime': parseInt (now / 1000),
         };
         // max limit = 1001
         if (limit !== undefined) {
