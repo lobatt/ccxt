@@ -228,7 +228,7 @@ class mxc(Exchange):
         request = {
             'market': self.market_id(symbol),
             'interval': timeframe,
-            'startTime': int(now - periodDurationInSeconds / 1000),
+            'startTime': int(now / 1000 - periodDurationInSeconds),
         }
         # max limit = 1001
         if limit is not None:
