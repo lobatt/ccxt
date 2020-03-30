@@ -63,7 +63,11 @@ Certified Cryptocurrency Exchanges
 Supported Cryptocurrency Exchange Markets
 -----------------------------------------
 
+<<<<<<< HEAD
 The ccxt library currently supports the following 125 cryptocurrency exchange markets and trading APIs:
+=======
+The ccxt library currently supports the following 122 cryptocurrency exchange markets and trading APIs:
+The ccxt library currently supports the following 123 cryptocurrency exchange markets and trading APIs:
 
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 |        logo            | id                   | name                                                                                         | ver   | doc                                                                                               | certified          |
