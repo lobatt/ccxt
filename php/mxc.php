@@ -235,7 +235,7 @@ class mxc extends Exchange {
         $request = array(
             'market' => $this->market_id($symbol),
             'interval' => $timeframe,
-            'startTime' => intval ($now - $periodDurationInSeconds / 1000),
+            'startTime' => intval ($now / 1000 - $periodDurationInSeconds),
         );
         // max $limit = 1001
         if ($limit !== null) {
