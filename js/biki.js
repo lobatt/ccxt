@@ -64,7 +64,7 @@ module.exports = class biki extends Exchange {
                 'public': {
                     'get': [
                         'common/symbols',
-                        'market_depth',
+                        'market_dept',
                         'get_trades',
                         'get_ticker',
                         'get_records',
@@ -194,7 +194,8 @@ module.exports = class biki extends Exchange {
             'symbol': this.marketId (symbol),
         };
         const response = await this.publicGetMarketDept (this.extend (request, params));
-        const orderbook = this.safeValue (response, 'tick');
+        const data = this.safeValue (response, 'data');
+        const orderbook = this.safeValue (data, 'tick');
         return this.parseOrderBook (orderbook);
     }
 
@@ -282,7 +283,8 @@ module.exports = class biki extends Exchange {
     }
 
     parseTrade (trade, market = undefined) {
-        const timestamp = this.safeTimestamp (trade, 'ts') / 1000;
+        // API doc says 'ts', but in fact it is 'ctime'
+        const timestamp = this.safeTimestamp (trade, 'ctime') / 1000;
         // take either of orderid or orderId
         const price = this.safeFloat (trade, 'price');
         const amount = this.safeFloat (trade, 'amount');
@@ -325,7 +327,7 @@ module.exports = class biki extends Exchange {
         if (!data) {
             throw new ExchangeError (this.id + ' fetchTrades got an unrecognized response');
         }
-        return this.parseTrades (data['resultList'], market, since, limit);
+        return this.parseTrades (data, market, since, limit);
     }
 
     async fetchOrders (symbol = undefined, since = undefined, limit = undefined, params = {}) {
@@ -466,7 +468,7 @@ module.exports = class biki extends Exchange {
             }
         } else {
             this.checkRequiredCredentials ();
-            const auth = this.rawencode (this.keysort (query).replace (/=/g, ''));
+            const auth = this.rawencode (this.keysort (query).replace ('=', ''));
             const signature = this.hash (this.encode (auth + this.secret), 'md5');
             const suffix = 'sign=' + signature;
             url += '?' + auth + '&' + suffix;
