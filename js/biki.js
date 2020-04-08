@@ -7,7 +7,7 @@ const { ExchangeError, ArgumentsRequired } = require ('./base/errors');
 
 // ---------------------------------------------------------------------------
 
-module.exports = class mxc extends Exchange {
+module.exports = class biki extends Exchange {
     describe () {
         return this.deepExtend (super.describe (), {
             'id': 'biki',
