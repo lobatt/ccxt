@@ -70,10 +70,14 @@ You can obtain a live-updated version of the bundle by removing the version numb
 .. code:: html
 
 <<<<<<< HEAD
+<<<<<<< HEAD
    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ccxt@1.25.86/dist/ccxt.browser.js"></script>
 =======
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ccxt@1.21.4/dist/ccxt.browser.js"></script>
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ccxt@1.23.3/dist/ccxt.browser.js"></script>
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 Creates a global ``ccxt`` object:
 
@@ -313,12 +317,17 @@ Python aiohttp SOCKS proxy
     async def test():
 
 <<<<<<< HEAD
+<<<<<<< HEAD
        connector = aiohttp_socks.ProxyConnector.from_url('socks5://user:password@127.0.0.1:1080')
        session = aiohttp.ClientSession(connector=connector)
 =======
         connector = aiohttp_socks.SocksConnector.from_url('socks5://user:password@127.0.0.1:1080')
         session = aiohttp.ClientSession(connector=connector)
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+        connector = aiohttp_socks.SocksConnector.from_url('socks5://user:password@127.0.0.1:1080')
+        session = aiohttp.ClientSession(connector=connector)
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
         exchange = ccxt.binance({
             'session': session,

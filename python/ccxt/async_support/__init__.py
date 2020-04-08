@@ -57,6 +57,7 @@ from ccxt.async_support.bcex import bcex                                  # noqa
 from ccxt.async_support.bequant import bequant                            # noqa: F401
 from ccxt.async_support.bibox import bibox                                # noqa: F401
 from ccxt.async_support.bigone import bigone                              # noqa: F401
+from ccxt.async_support.biki import biki                                  # noqa: F401
 from ccxt.async_support.binance import binance                            # noqa: F401
 from ccxt.async_support.binanceje import binanceje                        # noqa: F401
 from ccxt.async_support.binanceus import binanceus                        # noqa: F401
@@ -180,6 +181,7 @@ exchanges = [
     'bequant',
     'bibox',
     'bigone',
+    'biki',
     'binance',
     'binanceje',
     'binanceus',

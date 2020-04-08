@@ -66,6 +66,7 @@ class Exchange {
         'bequant',
         'bibox',
         'bigone',
+        'biki',
         'binance',
         'binanceje',
         'binanceus',

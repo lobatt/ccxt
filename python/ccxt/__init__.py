@@ -76,6 +76,7 @@ from ccxt.bcex import bcex                                  # noqa: F401
 from ccxt.bequant import bequant                            # noqa: F401
 from ccxt.bibox import bibox                                # noqa: F401
 from ccxt.bigone import bigone                              # noqa: F401
+from ccxt.biki import biki                                  # noqa: F401
 from ccxt.binance import binance                            # noqa: F401
 from ccxt.binanceje import binanceje                        # noqa: F401
 from ccxt.binanceus import binanceus                        # noqa: F401
@@ -199,6 +200,7 @@ exchanges = [
     'bequant',
     'bibox',
     'bigone',
+    'biki',
     'binance',
     'binanceje',
     'binanceus',

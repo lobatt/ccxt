@@ -499,7 +499,6 @@
     "timex.io",
     "TimeX",
     "bitz.com",
-<<<<<<< HEAD
     "topliq.com",
     "TOP.Q",
     "hollaex.com",
@@ -508,11 +507,11 @@
     "Bybit",
     "aofex.com",
     "AOFEX",
-    "byte-trade.com"
-=======
+    "byte-trade.com",
+    "biki.com",
+    "Biki",
     "mxc.ceo",
     "MXC"
->>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
   ],
   "collective": {
     "type": "opencollective",

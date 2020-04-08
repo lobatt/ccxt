@@ -2,12 +2,17 @@ CCXT – CryptoCurrency eXchange Trading Library
 ==============================================
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 `Build Status <https://travis-ci.org/ccxt/ccxt>`__ `npm <https://npmjs.com/package/ccxt>`__ `PyPI <https://pypi.python.org/pypi/ccxt>`__ `NPM Downloads <https://www.npmjs.com/package/ccxt>`__ `Discord <https://discord.gg/dhzSKYU>`__ `Supported Exchanges <https://github.com/ccxt/ccxt/wiki/Exchange-Markets>`__ `Open Collective <https://opencollective.com/ccxt>`__
 `Twitter Follow <https://twitter.com/ccxt_official>`__
 =======
 |Build Status| |npm| |PyPI| |NPM Downloads| |Gitter| |Supported Exchanges| |Open Collective|
 |Twitter Follow|
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+|Build Status| |npm| |PyPI| |NPM Downloads| |Gitter| |Supported Exchanges| |Open Collective|
+|Twitter Follow|
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 A JavaScript / Python / PHP library for cryptocurrency trading and e-commerce with support for many bitcoin/ether/altcoin exchange markets and merchant APIs.
 
@@ -36,11 +41,15 @@ Sponsored Promotion
 Want this place? Contact us: info@ccxt.trade
 
 |Placehodler|
+<<<<<<< HEAD
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 See Also
 --------
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 -  \ `Nomics API <https://p.nomics.com/cryptocurrency-bitcoin-api>`__\   `Nomics API <https://p.nomics.com/cryptocurrency-bitcoin-api>`__ — enterprise-grade `crypto market cap & pricing data <https://nomics.com>`__ API for your fund, smart contract, or app.
 -  \ `Quadency <https://quadency.com?utm_source=ccxt>`__\   `Quadency <https://quadency.com?utm_source=ccxt>`__ — professional crypto terminal, algo trading, and unified streaming APIs.
@@ -51,10 +60,16 @@ See Also
 -  \ |TabTrader|\   **`TabTrader <https://tab-trader.com/?utm_source=ccxt>`__** — trading on all exchanges in one app. Avaliable on `Android <https://play.google.com/store/apps/details?id=com.tabtrader.android&referrer=utm_source%3Dccxt>`__ and `iOS <https://itunes.apple.com/app/apple-store/id1095716562?mt=8>`__.
 -  \ |CoinFabrik|\   **`CoinFabrik <https://www.coinfabrik.com/#contact_us>`__** — development, research, and security audit for cryptocurrency and blockchain applications.
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+-  \ |Nomics API|\   **`Nomics API <https://p.nomics.com/cryptocurrency-bitcoin-api>`__** — enterprise-grade `crypto market cap & pricing data <https://nomics.com>`__ API for your fund, smart contract, or app.
+-  \ |Quadency|\   **`Quadency <https://quadency.com?utm_source=ccxt>`__** — professional crypto terminal, algo trading, and unified streaming APIs.
+-  \ |TabTrader|\   **`TabTrader <https://tab-trader.com/?utm_source=ccxt>`__** — trading on all exchanges in one app. Avaliable on `Android <https://play.google.com/store/apps/details?id=com.tabtrader.android&referrer=utm_source%3Dccxt>`__ and `iOS <https://itunes.apple.com/app/apple-store/id1095716562?mt=8>`__.
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 Certified Cryptocurrency Exchanges
 ----------------------------------
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 +-----------------------------------------------------------------------------+-----------+-----------------------------------------------------------------------------+-----+---------------------------------------------------------------------------------------+----------------------------------------------------------------------+---------------------------------+
 |        logo                                                                 | id        | name                                                                        | ver | doc                                                                                   | certified                                                            | pro                             |
@@ -78,6 +93,8 @@ Certified Cryptocurrency Exchanges
 | `upbit <https://upbit.com>`__                                               | upbit     | `Upbit <https://upbit.com>`__                                               | 1   | `API <https://docs.upbit.com/docs/%EC%9A%94%EC%B2%AD-%EC%88%98-%EC%A0%9C%ED%95%9C>`__ | `CCXT Certified <https://github.com/ccxt/ccxt/wiki/Certification>`__ | `CCXT Pro <https://ccxt.pro>`__ |
 +-----------------------------------------------------------------------------+-----------+-----------------------------------------------------------------------------+-----+---------------------------------------------------------------------------------------+----------------------------------------------------------------------+---------------------------------+
 =======
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 +----------------------+-------------+---------------------------------------------------------------------------+-------+-----------------------------------------------------------------------------------------+--------------------+
 |        logo          | id          | name                                                                      | ver   | doc                                                                                     | certified          |
 +======================+=============+===========================================================================+=======+=========================================================================================+====================+
@@ -95,17 +112,24 @@ Certified Cryptocurrency Exchanges
 +----------------------+-------------+---------------------------------------------------------------------------+-------+-----------------------------------------------------------------------------------------+--------------------+
 | |kraken|             | kraken      | `Kraken <https://www.kraken.com>`__                                       | 0     | `API <https://www.kraken.com/features/api>`__                                           | |CCXT Certified|   |
 +----------------------+-------------+---------------------------------------------------------------------------+-------+-----------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |kucoin|             | kucoin      | `KuCoin <https://www.kucoin.com/?rcode=E5wkqe>`__                         | 2     | `API <https://docs.kucoin.com>`__                                                       | |CCXT Certified|   |
 +----------------------+-------------+---------------------------------------------------------------------------+-------+-----------------------------------------------------------------------------------------+--------------------+
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 | |poloniex|           | poloniex    | `Poloniex <https://www.poloniex.com/?utm_source=ccxt&utm_medium=web>`__   | \*    | `API <https://docs.poloniex.com>`__                                                     | |CCXT Certified|   |
 +----------------------+-------------+---------------------------------------------------------------------------+-------+-----------------------------------------------------------------------------------------+--------------------+
 | |upbit|              | upbit       | `Upbit <https://upbit.com>`__                                             | 1     | `API <https://docs.upbit.com/docs/%EC%9A%94%EC%B2%AD-%EC%88%98-%EC%A0%9C%ED%95%9C>`__   | |CCXT Certified|   |
 +----------------------+-------------+---------------------------------------------------------------------------+-------+-----------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 Supported Cryptocurrency Exchange Markets
 -----------------------------------------
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 The CCXT library currently supports the following 119 cryptocurrency exchange markets and trading APIs:
@@ -358,6 +382,8 @@ The library is under `MIT license <https://github.com/ccxt/ccxt/blob/master/LICE
 =======
 =======
 >>>>>>> 161b74d77... bug fix
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 The ccxt library currently supports the following 125 cryptocurrency exchange markets and trading APIs:
 =======
 The ccxt library currently supports the following 122 cryptocurrency exchange markets and trading APIs:
@@ -372,8 +398,11 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |adara|                | adara                | `Adara <https://adara.io>`__                                                                 | 1     | `API <https://api.adara.io/v1>`__                                                                 |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |allcoin|              | allcoin              | `Allcoin <https://www.allcoin.com>`__                                                        | 1     | `API <https://www.allcoin.com/api_market/market>`__                                               |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 | |anxpro|               | anxpro               | `ANXPro <https://anxpro.com>`__                                                              | \*    | `API <https://anxv2.docs.apiary.io>`__                                                            |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |bcex|                 | bcex                 | `BCEX <https://www.bcex.top/register?invite_code=758978&lang=en>`__                          | 1     | `API <https://github.com/BCEX-TECHNOLOGY-LIMITED/API_Docs/wiki/Interface>`__                      |                    |
@@ -402,7 +431,11 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |bitflyer|             | bitflyer             | `bitFlyer <https://bitflyer.jp>`__                                                           | 1     | `API <https://lightning.bitflyer.com/docs?lang=en>`__                                             |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |bitforex|             | bitforex             | `Bitforex <https://www.bitforex.com/en/invitationRegister?inviterId=1867438>`__              | 1     | `API <https://github.com/bitforexapi/API_Docs/wiki>`__                                            |                    |
+=======
+| |bitforex|             | bitforex             | `Bitforex <https://www.bitforex.com/en/invitationRegister?inviterId=1867438>`__              | 1     | `API <https://github.com/githubdev2020/API_Doc_en/wiki>`__                                        |                    |
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |bithumb|              | bithumb              | `Bithumb <https://www.bithumb.com>`__                                                        | \*    | `API <https://apidocs.bithumb.com>`__                                                             |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
@@ -428,7 +461,11 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |bl3p|                 | bl3p                 | `BL3P <https://bl3p.eu>`__                                                                   | 1     | `API <https://github.com/BitonicNL/bl3p-api/tree/master/docs>`__                                  |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |bleutrade|            | bleutrade            | `Bleutrade <https://bleutrade.com>`__                                                        | 2     | `API <https://app.swaggerhub.com/apis-docs/bleu/white-label/3.0.0>`__                             |                    |
+=======
+| |bleutrade|            | bleutrade            | `Bleutrade <https://bleutrade.com>`__                                                        | \*    | `API <https://app.swaggerhub.com/apis-docs/bleu/white-label/3.0.0>`__                             |                    |
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |braziliex|            | braziliex            | `Braziliex <https://braziliex.com/?ref=5FE61AB6F6D67DA885BC98BA27223465>`__                  | \*    | `API <https://braziliex.com/exchange/api.php>`__                                                  |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
@@ -462,7 +499,11 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |coinbaseprime|        | coinbaseprime        | `Coinbase Prime <https://prime.coinbase.com>`__                                              | \*    | `API <https://docs.prime.coinbase.com>`__                                                         |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |coinbasepro|          | coinbasepro          | `Coinbase Pro <https://pro.coinbase.com/>`__                                                 | \*    | `API <https://docs.pro.coinbase.com/>`__                                                          |                    |
+=======
+| |coinbasepro|          | coinbasepro          | `Coinbase Pro <https://pro.coinbase.com/>`__                                                 | \*    | `API <https://docs.pro.coinbase.com>`__                                                           |                    |
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |coincheck|            | coincheck            | `coincheck <https://coincheck.com>`__                                                        | \*    | `API <https://coincheck.com/documents/exchange/api>`__                                            |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
@@ -538,7 +579,11 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |kraken|               | kraken               | `Kraken <https://www.kraken.com>`__                                                          | 0     | `API <https://www.kraken.com/features/api>`__                                                     | |CCXT Certified|   |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |kucoin|               | kucoin               | `KuCoin <https://www.kucoin.com/?rcode=E5wkqe>`__                                            | 2     | `API <https://docs.kucoin.com>`__                                                                 | |CCXT Certified|   |
+=======
+| |kucoin|               | kucoin               | `KuCoin <https://www.kucoin.com/?rcode=E5wkqe>`__                                            | 2     | `API <https://docs.kucoin.com>`__                                                                 |                    |
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |kuna|                 | kuna                 | `Kuna <https://kuna.io?r=kunaid-gvfihe8az7o4>`__                                             | 2     | `API <https://kuna.io/documents/api>`__                                                           |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
@@ -556,8 +601,11 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |lykke|                | lykke                | `Lykke <https://www.lykke.com>`__                                                            | 1     | `API <https://hft-api.lykke.com/swagger/ui/>`__                                                   |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |mandala|              | mandala              | `Mandala <https://trade.mandalaex.com/?ref=564377>`__                                        | 2     | `API <https://apidocs.mandalaex.com>`__                                                           |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 | |mercado|              | mercado              | `Mercado Bitcoin <https://www.mercadobitcoin.com.br>`__                                      | 3     | `API <https://www.mercadobitcoin.com.br/api-doc>`__                                               |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |mixcoins|             | mixcoins             | `MixCoins <https://mixcoins.com>`__                                                          | 1     | `API <https://mixcoins.com/help/api/>`__                                                          |                    |
@@ -598,14 +646,22 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |timex|                | timex                | `TimeX <https://timex.io>`__                                                                 | 1     | `API <https://docs.timex.io>`__                                                                   |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
+=======
+| |topq|                 | topq                 | `TOP.Q <https://www.topliq.com>`__                                                           | 1     | `API <https://github.com/topq-exchange/api_docs_en/wiki/REST_api_reference>`__                    |                    |
++------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 | |upbit|                | upbit                | `Upbit <https://upbit.com>`__                                                                | 1     | `API <https://docs.upbit.com/docs/%EC%9A%94%EC%B2%AD-%EC%88%98-%EC%A0%9C%ED%95%9C>`__             | |CCXT Certified|   |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |vaultoro|             | vaultoro             | `Vaultoro <https://www.vaultoro.com>`__                                                      | 1     | `API <https://api.vaultoro.com>`__                                                                |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |vbtc|                 | vbtc                 | `VBTC <https://vbtc.exchange>`__                                                             | 1     | `API <https://blinktrade.com/docs>`__                                                             |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+<<<<<<< HEAD
 | |virwox|               | virwox               | `VirWoX <https://www.virwox.com>`__                                                          | \*    | `API <https://www.virwox.com/developers.php>`__                                                   |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 | |whitebit|             | whitebit             | `WhiteBit <https://whitebit.com/referral/d9bdf40e-28f2-4b52-b2f9-cd1415d82963>`__            | 2     | `API <https://documenter.getpostman.com/view/7473075/SVSPomwS?version=latest#intro>`__            |                    |
 +------------------------+----------------------+----------------------------------------------------------------------------------------------+-------+---------------------------------------------------------------------------------------------------+--------------------+
 | |xbtce|                | xbtce                | `xBTCe <https://xbtce.com/?agent=XX97BTCXXXG687021000B>`__                                   | 1     | `API <https://www.xbtce.com/tradeapi>`__                                                          |                    |
@@ -620,7 +676,10 @@ The ccxt library currently supports the following 123 cryptocurrency exchange ma
 The list above is updated frequently, new crypto markets, exchanges, bug fixes, and API endpoints are introduced on a regular basis. See the `Manual <https://github.com/ccxt/ccxt/wiki>`__ for more details. If you can't find a cryptocurrency exchange in the list above and want it to be added, post a link to it by opening an issue here on GitHub or send us an email.
 
 The library is under `MIT license <https://github.com/ccxt/ccxt/blob/master/LICENSE.txt>`__, that means it's absolutely free for any developer to build commercial and opensource software on top of it, but use it at your own risk with no warranties, as is.
+<<<<<<< HEAD
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 --------------
 
@@ -675,10 +734,14 @@ CDNs are not updated in real-time and may have delays. Defaulting to the most re
 .. code:: html
 
 <<<<<<< HEAD
+<<<<<<< HEAD
    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ccxt@1.25.86/dist/ccxt.browser.js"></script>
 =======
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ccxt@1.21.4/dist/ccxt.browser.js"></script>
 >>>>>>> fa5df34bd... commit mxc support to master to avoid pipenv freezing
+=======
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ccxt@1.23.3/dist/ccxt.browser.js"></script>
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 Creates a global ``ccxt`` object:
 
@@ -981,7 +1044,12 @@ Social
 
 -  `Follow us on Twitter <https://twitter.com/ccxt_official>`__
 -  `Read our blog on Medium <https://medium.com/@ccxt>`__
+<<<<<<< HEAD
 -  \ `Discord <https://discord.gg/dhzSKYU>`__\ 
+=======
+
+|Gitter|
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 
 Team
 ----
@@ -1007,10 +1075,14 @@ For business inquiries: info@ccxt.trade
 .. |Gitter| image:: https://badges.gitter.im/ccxt-dev/ccxt.svg
    :target: https://gitter.im/ccxt-dev/ccxt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
 <<<<<<< HEAD
+<<<<<<< HEAD
 .. |Supported Exchanges| image:: https://img.shields.io/badge/exchanges-124-blue.svg
 =======
 .. |Supported Exchanges| image:: https://img.shields.io/badge/exchanges-123-blue.svg
 >>>>>>> 5a3be7d2d... bug fix
+=======
+.. |Supported Exchanges| image:: https://img.shields.io/badge/exchanges-123-blue.svg
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
    :target: https://github.com/ccxt/ccxt/wiki/Exchange-Markets
 .. |Open Collective| image:: https://opencollective.com/ccxt/backers/badge.svg
    :target: https://opencollective.com/ccxt
@@ -1024,8 +1096,11 @@ For business inquiries: info@ccxt.trade
    :target: https://quadency.com?utm_source=ccxt
 .. |TabTrader| image:: https://user-images.githubusercontent.com/1294454/66755907-9c3e8880-eea1-11e9-846e-0bff349ceb87.png
    :target: https://tab-trader.com/?utm_source=ccxt
+<<<<<<< HEAD
 .. |CoinFabrik| image:: https://user-images.githubusercontent.com/1294454/69568442-a8535500-0fcc-11ea-981d-9422a92bbc23.png
    :target: https://www.coinfabrik.com/#contact_us
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |binance| image:: https://user-images.githubusercontent.com/1294454/29604020-d5483cdc-87ee-11e7-94c7-d1a8d9169293.jpg
    :target: https://www.binance.com/?ref=10205187
 .. |CCXT Certified| image:: https://img.shields.io/badge/CCXT-certified-green.svg
@@ -1042,8 +1117,11 @@ For business inquiries: info@ccxt.trade
    :target: https://idex.market
 .. |kraken| image:: https://user-images.githubusercontent.com/1294454/27766599-22709304-5ede-11e7-9de1-9f33732e1509.jpg
    :target: https://www.kraken.com
+<<<<<<< HEAD
 .. |kucoin| image:: https://user-images.githubusercontent.com/1294454/57369448-3cc3aa80-7196-11e9-883e-5ebeb35e4f57.jpg
    :target: https://www.kucoin.com/?rcode=E5wkqe
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |poloniex| image:: https://user-images.githubusercontent.com/1294454/27766817-e9456312-5ee6-11e7-9b3c-b628ca5626a5.jpg
    :target: https://www.poloniex.com/?utm_source=ccxt&utm_medium=web
 .. |upbit| image:: https://user-images.githubusercontent.com/1294454/49245610-eeaabe00-f423-11e8-9cba-4b0aed794799.jpg
@@ -1054,8 +1132,11 @@ For business inquiries: info@ccxt.trade
    :target: https://acx.io
 .. |adara| image:: https://user-images.githubusercontent.com/1294454/49189583-0466a780-f380-11e8-9248-57a631aad2d6.jpg
    :target: https://adara.io
+<<<<<<< HEAD
 .. |allcoin| image:: https://user-images.githubusercontent.com/1294454/31561809-c316b37c-b061-11e7-8d5a-b547b4d730eb.jpg
    :target: https://www.allcoin.com
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |anxpro| image:: https://user-images.githubusercontent.com/1294454/27765983-fd8595da-5ec9-11e7-82e3-adb3ab8c2612.jpg
    :target: https://anxpro.com
 .. |bcex| image:: https://user-images.githubusercontent.com/1294454/43362240-21c26622-92ee-11e8-9464-5801ec526d77.jpg
@@ -1206,6 +1287,11 @@ For business inquiries: info@ccxt.trade
    :target: https://www.itbit.com
 .. |kkex| image:: https://user-images.githubusercontent.com/1294454/47401462-2e59f800-d74a-11e8-814f-e4ae17b4968a.jpg
    :target: https://kkex.com
+<<<<<<< HEAD
+=======
+.. |kucoin| image:: https://user-images.githubusercontent.com/1294454/57369448-3cc3aa80-7196-11e9-883e-5ebeb35e4f57.jpg
+   :target: https://www.kucoin.com/?rcode=E5wkqe
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |kuna| image:: https://user-images.githubusercontent.com/1294454/31697638-912824fa-b3c1-11e7-8c36-cf9606eb94ac.jpg
    :target: https://kuna.io?r=kunaid-gvfihe8az7o4
 .. |lakebtc| image:: https://user-images.githubusercontent.com/1294454/28074120-72b7c38a-6660-11e7-92d9-d9027502281d.jpg
@@ -1222,8 +1308,11 @@ For business inquiries: info@ccxt.trade
    :target: https://www.luno.com/invite/44893A
 .. |lykke| image:: https://user-images.githubusercontent.com/1294454/34487620-3139a7b0-efe6-11e7-90f5-e520cef74451.jpg
    :target: https://www.lykke.com
+<<<<<<< HEAD
 .. |mandala| image:: https://user-images.githubusercontent.com/1294454/54686665-df629400-4b2a-11e9-84d3-d88856367dd7.jpg
    :target: https://trade.mandalaex.com/?ref=564377
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |mercado| image:: https://user-images.githubusercontent.com/1294454/27837060-e7c58714-60ea-11e7-9192-f05e86adb83f.jpg
    :target: https://www.mercadobitcoin.com.br
 .. |mixcoins| image:: https://user-images.githubusercontent.com/1294454/30237212-ed29303c-9535-11e7-8af8-fcd381cfa20c.jpg
@@ -1262,12 +1351,20 @@ For business inquiries: info@ccxt.trade
    :target: https://tidex.com/exchange/?ref=57f5638d9cd7
 .. |timex| image:: https://user-images.githubusercontent.com/1294454/70423869-6839ab00-1a7f-11ea-8f94-13ae72c31115.jpg
    :target: https://timex.io
+<<<<<<< HEAD
+=======
+.. |topq| image:: https://user-images.githubusercontent.com/1294454/74596147-50247000-505c-11ea-9224-4fd347cfbb49.jpg
+   :target: https://www.topliq.com
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |vaultoro| image:: https://user-images.githubusercontent.com/1294454/27766880-f205e870-5ee9-11e7-8fe2-0d5b15880752.jpg
    :target: https://www.vaultoro.com
 .. |vbtc| image:: https://user-images.githubusercontent.com/1294454/27991481-1f53d1d8-6481-11e7-884e-21d17e7939db.jpg
    :target: https://vbtc.exchange
+<<<<<<< HEAD
 .. |virwox| image:: https://user-images.githubusercontent.com/1294454/27766894-6da9d360-5eea-11e7-90aa-41f2711b7405.jpg
    :target: https://www.virwox.com
+=======
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
 .. |whitebit| image:: https://user-images.githubusercontent.com/1294454/66732963-8eb7dd00-ee66-11e9-849b-10d9282bb9e0.jpg
    :target: https://whitebit.com/referral/d9bdf40e-28f2-4b52-b2f9-cd1415d82963
 .. |xbtce| image:: https://user-images.githubusercontent.com/1294454/28059414-e235970c-662c-11e7-8c3a-08e31f78684b.jpg
@@ -1278,3 +1375,8 @@ For business inquiries: info@ccxt.trade
    :target: https://zaif.jp
 .. |zb| image:: https://user-images.githubusercontent.com/1294454/32859187-cd5214f0-ca5e-11e7-967d-96568e2e2bd1.jpg
    :target: https://www.zb.com
+<<<<<<< HEAD
+=======
+.. |Gitter| image:: https://badges.gitter.im/ccxt-dev/ccxt.svg
+   :target: https://gitter.im/ccxt-dev/ccxt
+>>>>>>> 06b025e473331ceb0e1d004b116c54af7c413e40
