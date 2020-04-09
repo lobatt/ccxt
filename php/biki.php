@@ -125,8 +125,8 @@ class biki extends Exchange {
             $quote = $this->safe_currency_code($quoteId);
             $symbol = $base . '/' . $quote;
             $precision = array(
-                'amount' => $this->safe_integer($market['amount_precision']),
-                'price' => $this->safe_integer($market['price_precision']),
+                'amount' => $this->safe_integer($market, 'amount_precision'),
+                'price' => $this->safe_integer($market, 'price_precision'),
             );
             $amountLimits = array(
                 'min' => pow(10, -$market['amount_precision']),

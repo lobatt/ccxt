@@ -123,8 +123,8 @@ class biki(Exchange):
             quote = self.safe_currency_code(quoteId)
             symbol = base + '/' + quote
             precision = {
-                'amount': self.safe_integer(market['amount_precision']),
-                'price': self.safe_integer(market['price_precision']),
+                'amount': self.safe_integer(market, 'amount_precision'),
+                'price': self.safe_integer(market, 'price_precision'),
             }
             amountLimits = {
                 'min': math.pow(10, -market['amount_precision']),

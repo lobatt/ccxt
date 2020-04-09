@@ -122,8 +122,8 @@ module.exports = class biki extends Exchange {
             const quote = this.safeCurrencyCode (quoteId);
             const symbol = base + '/' + quote;
             const precision = {
-                'amount': this.safeInteger (market['amount_precision']),
-                'price': this.safeInteger (market['price_precision']),
+                'amount': this.safeInteger (market, 'amount_precision'),
+                'price': this.safeInteger (market, 'price_precision'),
             };
             const amountLimits = {
                 'min': Math.pow (10, -market['amount_precision']),
