@@ -116,25 +116,21 @@ module.exports = class biki extends Exchange {
         for (let i = 0; i < markets.length; i++) {
             const market = markets[i];
             const id = market['symbol'];
-            const details = market;
-            // all of their symbols are separated with an underscore
-            // but not boe_eth_eth (BOE_ETH/ETH) which has two underscores
-            // https://github.com/ccxt/ccxt/issues/4894
             const baseId = market['base_coin'];
             const quoteId = market['count_coin'];
             const base = this.safeCurrencyCode (baseId);
             const quote = this.safeCurrencyCode (quoteId);
             const symbol = base + '/' + quote;
             const precision = {
-                'amount': details['amount_precision'],
-                'price': details['price_precision'],
+                'amount': this.safeInteger (market['amount_precision']),
+                'price': this.safeInteger (market['price_precision']),
             };
             const amountLimits = {
-                'min': Math.pow (10, -details['amount_precision']),
+                'min': Math.pow (10, -market['amount_precision']),
                 'max': undefined,
             };
             const priceLimits = {
-                'min': Math.pow (10, -details['price_precision']),
+                'min': Math.pow (10, -market['price_precision']),
                 'max': undefined,
             };
             const defaultCost = amountLimits['min'] * priceLimits['min'];
@@ -468,7 +464,7 @@ module.exports = class biki extends Exchange {
             }
         } else {
             this.checkRequiredCredentials ();
-            const auth = this.rawencode (this.keysort (query).replace ('=', ''));
+            const auth = this.rawencode (this.keysort (query)).replace ('=', '');
             const signature = this.hash (this.encode (auth + this.secret), 'md5');
             const suffix = 'sign=' + signature;
             url += '?' + auth + '&' + suffix;
