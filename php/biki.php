@@ -119,25 +119,21 @@ class biki extends Exchange {
         for ($i = 0; $i < count($markets); $i++) {
             $market = $markets[$i];
             $id = $market['symbol'];
-            $details = $market;
-            // all of their symbols are separated with an underscore
-            // but not boe_eth_eth (BOE_ETH/ETH) which has two underscores
-            // https://github.com/ccxt/ccxt/issues/4894
             $baseId = $market['base_coin'];
             $quoteId = $market['count_coin'];
             $base = $this->safe_currency_code($baseId);
             $quote = $this->safe_currency_code($quoteId);
             $symbol = $base . '/' . $quote;
             $precision = array(
-                'amount' => $details['amount_precision'],
-                'price' => $details['price_precision'],
+                'amount' => $this->safe_integer($market['amount_precision']),
+                'price' => $this->safe_integer($market['price_precision']),
             );
             $amountLimits = array(
-                'min' => pow(10, -$details['amount_precision']),
+                'min' => pow(10, -$market['amount_precision']),
                 'max' => null,
             );
             $priceLimits = array(
-                'min' => pow(10, -$details['price_precision']),
+                'min' => pow(10, -$market['price_precision']),
                 'max' => null,
             );
             $defaultCost = $amountLimits['min'] * $priceLimits['min'];

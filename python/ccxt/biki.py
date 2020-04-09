@@ -117,25 +117,21 @@ class biki(Exchange):
         for i in range(0, len(markets)):
             market = markets[i]
             id = market['symbol']
-            details = market
-            # all of their symbols are separated with an underscore
-            # but not boe_eth_eth(BOE_ETH/ETH) which has two underscores
-            # https://github.com/ccxt/ccxt/issues/4894
             baseId = market['base_coin']
             quoteId = market['count_coin']
             base = self.safe_currency_code(baseId)
             quote = self.safe_currency_code(quoteId)
             symbol = base + '/' + quote
             precision = {
-                'amount': details['amount_precision'],
-                'price': details['price_precision'],
+                'amount': self.safe_integer(market['amount_precision']),
+                'price': self.safe_integer(market['price_precision']),
             }
             amountLimits = {
-                'min': math.pow(10, -details['amount_precision']),
+                'min': math.pow(10, -market['amount_precision']),
                 'max': None,
             }
             priceLimits = {
-                'min': math.pow(10, -details['price_precision']),
+                'min': math.pow(10, -market['price_precision']),
                 'max': None,
             }
             defaultCost = amountLimits['min'] * priceLimits['min']
@@ -439,7 +435,7 @@ class biki(Exchange):
                 url += '?' + self.urlencode(query)
         else:
             self.check_required_credentials()
-            auth = self.rawencode(self.keysort(query).replace('=', ''))
+            auth = self.rawencode(self.keysort(query)).replace('=', '')
             signature = self.hash(self.encode(auth + self.secret), 'md5')
             suffix = 'sign=' + signature
             url += '?' + auth + '&' + suffix
