@@ -357,7 +357,7 @@ class biki(Exchange):
             id = self.safe_string(order, 'order_id')
         symbol = None
         marketId = None
-        if 'baseCoin' in order and 'countCoin' in order:
+        if ('baseCoin' in order) and ('countCoin' in order):
             marketId = self.safe_string_lower(order, 'baseCoin') + self.safe_string_lower(order, 'countCoin')
             if marketId in self.markets_by_id:
                 market = self.markets_by_id[marketId]

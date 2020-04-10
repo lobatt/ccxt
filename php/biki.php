@@ -380,7 +380,7 @@ class biki extends Exchange {
         }
         $symbol = null;
         $marketId = null;
-        if (is_array($order && 'countCoin' in $order) && array_key_exists('baseCoin', $order && 'countCoin' in $order)) {
+        if ((is_array($order) && array_key_exists('baseCoin', $order)) && (is_array($order) && array_key_exists('countCoin', $order))) {
             $marketId = $this->safe_string_lower($order, 'baseCoin') . $this->safe_string_lower($order, 'countCoin');
             if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
                 $market = $this->markets_by_id[$marketId];

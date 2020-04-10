@@ -377,7 +377,7 @@ module.exports = class biki extends Exchange {
         }
         let symbol = undefined;
         let marketId = undefined;
-        if ('baseCoin' in order && 'countCoin' in order) {
+        if (('baseCoin' in order) && ('countCoin' in order)) {
             marketId = this.safeStringLower (order, 'baseCoin') + this.safeStringLower (order, 'countCoin');
             if (marketId in this.markets_by_id) {
                 market = this.markets_by_id[marketId];
