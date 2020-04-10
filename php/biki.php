@@ -95,6 +95,7 @@ class biki extends Exchange {
                 ),
             ),
             'exceptions' => array(
+                '1' => '\\ccxt\\BadResponse',
             ),
             'errorCodeNames' => array(
             ),
@@ -176,7 +177,7 @@ class biki extends Exchange {
         $coins = $this->safe_value($respData, 'coin_list');
         for ($i = 0; $i < count($coins); $i++) {
             $coin = $coins[$i];
-            $currencyId = $this->safe_value($coin['coin']);
+            $currencyId = $this->safe_value($coin, 'coin');
             $code = $this->safe_currency_code($currencyId);
             $account = $this->account();
             $account['free'] = $this->safe_float($coin, 'normal');
@@ -480,15 +481,13 @@ class biki extends Exchange {
         if ($response === null) {
             return;
         }
-        $resultString = $this->safe_string($response, 'result', '');
-        if ($resultString !== 'false') {
-            return;
-        }
+        // use $response $code for error
         $errorCode = $this->safe_string($response, 'code');
-        $message = $this->safe_string($response, 'message', $body);
-        if ($errorCode !== null) {
+        $message = $this->safe_string($response, 'msg', $body);
+        if ($errorCode !== null && $errorCode !== '0') {
             $feedback = $this->safe_string($this->errorCodeNames, $errorCode, $message);
-            $this->throw_exactly_matched_exception($this->exceptions['exact'], $errorCode, $feedback);
+            // XXX => just throwing generic error when API call went wrong
+            $this->throw_exactly_matched_exception($this->exceptions, '1', $feedback);
         }
     }
 }

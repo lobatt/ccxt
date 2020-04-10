@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError, ArgumentsRequired } = require ('./base/errors');
+const { ExchangeError, ArgumentsRequired, BadResponse } = require ('./base/errors');
 
 // ---------------------------------------------------------------------------
 
@@ -92,6 +92,7 @@ module.exports = class biki extends Exchange {
                 },
             },
             'exceptions': {
+                '1': BadResponse,
             },
             'errorCodeNames': {
             },
@@ -173,7 +174,7 @@ module.exports = class biki extends Exchange {
         const coins = this.safeValue (respData, 'coin_list');
         for (let i = 0; i < coins.length; i++) {
             const coin = coins[i];
-            const currencyId = this.safeValue (coin['coin']);
+            const currencyId = this.safeValue (coin, 'coin');
             const code = this.safeCurrencyCode (currencyId);
             const account = this.account ();
             account['free'] = this.safeFloat (coin, 'normal');
@@ -477,15 +478,13 @@ module.exports = class biki extends Exchange {
         if (response === undefined) {
             return;
         }
-        const resultString = this.safeString (response, 'result', '');
-        if (resultString !== 'false') {
-            return;
-        }
+        // use response code for error
         const errorCode = this.safeString (response, 'code');
-        const message = this.safeString (response, 'message', body);
-        if (errorCode !== undefined) {
+        const message = this.safeString (response, 'msg', body);
+        if (errorCode !== undefined && errorCode !== '0') {
             const feedback = this.safeString (this.errorCodeNames, errorCode, message);
-            this.throwExactlyMatchedException (this.exceptions['exact'], errorCode, feedback);
+            // XXX: just throwing generic error when API call went wrong
+            this.throwExactlyMatchedException (this.exceptions, '1', feedback);
         }
     }
 };

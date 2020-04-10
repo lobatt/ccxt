@@ -7,6 +7,7 @@ from ccxt.async_support.base.exchange import Exchange
 import math
 from ccxt.base.errors import ExchangeError
 from ccxt.base.errors import ArgumentsRequired
+from ccxt.base.errors import BadResponse
 
 
 class biki(Exchange):
@@ -95,6 +96,7 @@ class biki(Exchange):
                 },
             },
             'exceptions': {
+                '1': BadResponse,
             },
             'errorCodeNames': {
             },
@@ -172,7 +174,7 @@ class biki(Exchange):
         coins = self.safe_value(respData, 'coin_list')
         for i in range(0, len(coins)):
             coin = coins[i]
-            currencyId = self.safe_value(coin['coin'])
+            currencyId = self.safe_value(coin, 'coin')
             code = self.safe_currency_code(currencyId)
             account = self.account()
             account['free'] = self.safe_float(coin, 'normal')
@@ -445,11 +447,10 @@ class biki(Exchange):
     def handle_errors(self, code, reason, url, method, headers, body, response, requestHeaders, requestBody):
         if response is None:
             return
-        resultString = self.safe_string(response, 'result', '')
-        if resultString != 'false':
-            return
+        # use response code for error
         errorCode = self.safe_string(response, 'code')
-        message = self.safe_string(response, 'message', body)
-        if errorCode is not None:
+        message = self.safe_string(response, 'msg', body)
+        if errorCode is not None and errorCode != '0':
             feedback = self.safe_string(self.errorCodeNames, errorCode, message)
-            self.throw_exactly_matched_exception(self.exceptions['exact'], errorCode, feedback)
+            # XXX: just throwing generic error when API call went wrong
+            self.throw_exactly_matched_exception(self.exceptions, '1', feedback)
