@@ -468,7 +468,8 @@ class biki extends Exchange {
         } else {
             $this->check_required_credentials();
             $auth = $this->rawencode($this->keysort($query));
-            $signature = str_replace('&', '', $this->hash($this->encode($auth->replace ('=', '')) . $this->secret), 'md5');
+            $to_sign = str_replace('&', '', $auth->replace ('=', ''));
+            $signature = $this->hash($this->encode($to_sign . $this->secret), 'md5');
             $suffix = 'sign=' . $signature;
             $url .= '?' . $auth . '&' . $suffix;
         }

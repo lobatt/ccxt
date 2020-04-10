@@ -436,7 +436,8 @@ class biki(Exchange):
         else:
             self.check_required_credentials()
             auth = self.rawencode(self.keysort(query))
-            signature = self.hash(self.encode(auth.replace('=', '').replace('&', '') + self.secret), 'md5')
+            to_sign = auth.replace('=', '').replace('&', '')
+            signature = self.hash(self.encode(to_sign + self.secret), 'md5')
             suffix = 'sign=' + signature
             url += '?' + auth + '&' + suffix
         return {'url': url, 'method': method, 'body': body, 'headers': headers}
