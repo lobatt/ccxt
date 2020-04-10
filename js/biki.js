@@ -465,7 +465,7 @@ module.exports = class biki extends Exchange {
         } else {
             this.checkRequiredCredentials ();
             const auth = this.rawencode (this.keysort (query));
-            const signature = this.hash (this.encode (auth.replace ('=', '') + this.secret), 'md5');
+            const signature = this.hash (this.encode (auth.replace ('=', '').replace ('&', '') + this.secret), 'md5');
             const suffix = 'sign=' + signature;
             url += '?' + auth + '&' + suffix;
         }
