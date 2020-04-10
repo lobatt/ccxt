@@ -389,7 +389,12 @@ module.exports = class biki extends Exchange {
         if ('symbol' in order) {
             symbol = this.safeString (order, 'symbol');
         }
-        const timestamp = this.safeTimestamp (order, 'created_at') / 1000;
+        let timestamp = undefined;
+        let datetime = undefined;
+        if ('created_at' in order) {
+            timestamp = this.safeTimestamp (order, 'created_at') / 1000;
+            datetime = this.iso8601 (timestamp);
+        }
         const status = this.parseOrderStatus (this.safeString (order, 'status'));
         const side = this.parseOrderSide (this.safeString (order, 'type'));
         const price = this.safeFloat (order, 'price');
@@ -399,7 +404,7 @@ module.exports = class biki extends Exchange {
         const remaining = this.safeFloat (order, 'remain_volume');
         return {
             'id': id,
-            'datetime': this.iso8601 (timestamp),
+            'datetime': datetime,
             'timestamp': timestamp,
             'status': status,
             'symbol': symbol,

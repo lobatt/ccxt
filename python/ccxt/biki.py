@@ -365,7 +365,11 @@ class biki(Exchange):
                 symbol = market['symbol']
         if 'symbol' in order:
             symbol = self.safe_string(order, 'symbol')
-        timestamp = self.safe_timestamp(order, 'created_at') / 1000
+        timestamp = None
+        datetime = None
+        if 'created_at' in order:
+            timestamp = self.safe_timestamp(order, 'created_at') / 1000
+            datetime = self.iso8601(timestamp)
         status = self.parse_order_status(self.safe_string(order, 'status'))
         side = self.parse_order_side(self.safe_string(order, 'type'))
         price = self.safe_float(order, 'price')
@@ -375,7 +379,7 @@ class biki(Exchange):
         remaining = self.safe_float(order, 'remain_volume')
         return {
             'id': id,
-            'datetime': self.iso8601(timestamp),
+            'datetime': datetime,
             'timestamp': timestamp,
             'status': status,
             'symbol': symbol,

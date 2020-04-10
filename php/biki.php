@@ -392,7 +392,12 @@ class biki extends Exchange {
         if (is_array($order) && array_key_exists('symbol', $order)) {
             $symbol = $this->safe_string($order, 'symbol');
         }
-        $timestamp = $this->safe_timestamp($order, 'created_at') / 1000;
+        $timestamp = null;
+        $datetime = null;
+        if (is_array($order) && array_key_exists('created_at', $order)) {
+            $timestamp = $this->safe_timestamp($order, 'created_at') / 1000;
+            $datetime = $this->iso8601($timestamp);
+        }
         $status = $this->parse_order_status($this->safe_string($order, 'status'));
         $side = $this->parse_order_side($this->safe_string($order, 'type'));
         $price = $this->safe_float($order, 'price');
@@ -402,7 +407,7 @@ class biki extends Exchange {
         $remaining = $this->safe_float($order, 'remain_volume');
         return array(
             'id' => $id,
-            'datetime' => $this->iso8601($timestamp),
+            'datetime' => $datetime,
             'timestamp' => $timestamp,
             'status' => $status,
             'symbol' => $symbol,
