@@ -428,7 +428,7 @@ class biki extends Exchange {
         $market = $this->market($symbol);
         $request = array(
             'api_key' => $this->apiKey,
-            'req_time' => $this->milliseconds(),
+            'time' => $this->milliseconds(),
             'symbol' => $this->market_id($symbol),
             'price' => $price,
             'volume' => $amount,

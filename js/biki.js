@@ -425,7 +425,7 @@ module.exports = class biki extends Exchange {
         const market = this.market (symbol);
         const request = {
             'api_key': this.apiKey,
-            'req_time': this.milliseconds (),
+            'time': this.milliseconds (),
             'symbol': this.marketId (symbol),
             'price': price,
             'volume': amount,

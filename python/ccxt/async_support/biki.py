@@ -401,7 +401,7 @@ class biki(Exchange):
         market = self.market(symbol)
         request = {
             'api_key': self.apiKey,
-            'req_time': self.milliseconds(),
+            'time': self.milliseconds(),
             'symbol': self.market_id(symbol),
             'price': price,
             'volume': amount,
