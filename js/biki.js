@@ -376,12 +376,18 @@ module.exports = class biki extends Exchange {
             id = this.safeString (order, 'order_id');
         }
         let symbol = undefined;
-        const marketId = this.safeStringLower (order, 'baseCoin') + this.safeStringLower (order, 'countCoin');
-        if (marketId in this.markets_by_id) {
-            market = this.markets_by_id[marketId];
+        let marketId = undefined;
+        if ('baseCoin' in order && 'countCoin' in order) {
+            marketId = this.safeStringLower (order, 'baseCoin') + this.safeStringLower (order, 'countCoin');
+            if (marketId in this.markets_by_id) {
+                market = this.markets_by_id[marketId];
+            }
+            if (market !== undefined) {
+                symbol = market['symbol'];
+            }
         }
-        if (market !== undefined) {
-            symbol = market['symbol'];
+        if ('symbol' in order) {
+            symbol = this.safeString (order, 'symbol');
         }
         const timestamp = this.safeTimestamp (order, 'created_at') / 1000;
         const status = this.parseOrderStatus (this.safeString (order, 'status'));

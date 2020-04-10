@@ -356,11 +356,15 @@ class biki(Exchange):
         if id is None:
             id = self.safe_string(order, 'order_id')
         symbol = None
-        marketId = self.safe_string_lower(order, 'baseCoin') + self.safe_string_lower(order, 'countCoin')
-        if marketId in self.markets_by_id:
-            market = self.markets_by_id[marketId]
-        if market is not None:
-            symbol = market['symbol']
+        marketId = None
+        if 'baseCoin' in order and 'countCoin' in order:
+            marketId = self.safe_string_lower(order, 'baseCoin') + self.safe_string_lower(order, 'countCoin')
+            if marketId in self.markets_by_id:
+                market = self.markets_by_id[marketId]
+            if market is not None:
+                symbol = market['symbol']
+        if 'symbol' in order:
+            symbol = self.safe_string(order, 'symbol')
         timestamp = self.safe_timestamp(order, 'created_at') / 1000
         status = self.parse_order_status(self.safe_string(order, 'status'))
         side = self.parse_order_side(self.safe_string(order, 'type'))

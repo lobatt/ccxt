@@ -379,12 +379,18 @@ class biki extends Exchange {
             $id = $this->safe_string($order, 'order_id');
         }
         $symbol = null;
-        $marketId = $this->safe_string_lower($order, 'baseCoin') . $this->safe_string_lower($order, 'countCoin');
-        if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
-            $market = $this->markets_by_id[$marketId];
+        $marketId = null;
+        if (is_array($order && 'countCoin' in $order) && array_key_exists('baseCoin', $order && 'countCoin' in $order)) {
+            $marketId = $this->safe_string_lower($order, 'baseCoin') . $this->safe_string_lower($order, 'countCoin');
+            if (is_array($this->markets_by_id) && array_key_exists($marketId, $this->markets_by_id)) {
+                $market = $this->markets_by_id[$marketId];
+            }
+            if ($market !== null) {
+                $symbol = $market['symbol'];
+            }
         }
-        if ($market !== null) {
-            $symbol = $market['symbol'];
+        if (is_array($order) && array_key_exists('symbol', $order)) {
+            $symbol = $this->safe_string($order, 'symbol');
         }
         $timestamp = $this->safe_timestamp($order, 'created_at') / 1000;
         $status = $this->parse_order_status($this->safe_string($order, 'status'));
