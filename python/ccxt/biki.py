@@ -373,7 +373,7 @@ class biki(Exchange):
             timestamp = self.safe_timestamp(order, 'created_at') / 1000
             datetime = self.iso8601(timestamp)
         status = self.parse_order_status(self.safe_string(order, 'status'))
-        side = self.parse_order_side(self.safe_string(order, 'type'))
+        side = self.parse_order_side(self.safe_string(order, 'side'))
         price = self.safe_float(order, 'price')
         amount = self.safe_float(order, 'volume')
         filled = self.safe_float(order, 'deal_volume')

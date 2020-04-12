@@ -401,7 +401,7 @@ class biki extends Exchange {
             $datetime = $this->iso8601($timestamp);
         }
         $status = $this->parse_order_status($this->safe_string($order, 'status'));
-        $side = $this->parse_order_side($this->safe_string($order, 'type'));
+        $side = $this->parse_order_side($this->safe_string($order, 'side'));
         $price = $this->safe_float($order, 'price');
         $amount = $this->safe_float($order, 'volume');
         $filled = $this->safe_float($order, 'deal_volume');
