@@ -335,6 +335,8 @@ class biki(Exchange):
         sides = {
             '1': 'buy',
             '2': 'sell',
+            'BUY': 'buy',
+            'SELL': 'sell',
         }
         return self.safe_string(sides, side, side)
 

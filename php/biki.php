@@ -355,6 +355,8 @@ class biki extends Exchange {
         $sides = array(
             '1' => 'buy',
             '2' => 'sell',
+            'BUY' => 'buy',
+            'SELL' => 'sell',
         );
         return $this->safe_string($sides, $side, $side);
     }
