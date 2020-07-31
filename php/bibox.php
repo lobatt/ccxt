@@ -20,21 +20,27 @@ class bibox extends Exchange {
             'countries' => array( 'CN', 'US', 'KR' ),
             'version' => 'v1',
             'has' => array(
+                'cancelOrder' => true,
                 'CORS' => false,
-                'publicAPI' => false,
+                'createMarketOrder' => false, // or they will return https://github.com/ccxt/ccxt/issues/2338
+                'createOrder' => true,
                 'fetchBalance' => true,
-                'fetchDeposits' => true,
-                'fetchWithdrawals' => true,
+                'fetchClosedOrders' => true,
                 'fetchCurrencies' => true,
+                'fetchDeposits' => true,
                 'fetchDepositAddress' => true,
                 'fetchFundingFees' => true,
-                'fetchTickers' => true,
-                'fetchOrder' => true,
-                'fetchOpenOrders' => true,
-                'fetchClosedOrders' => true,
+                'fetchMarkets' => true,
                 'fetchMyTrades' => true,
                 'fetchOHLCV' => true,
-                'createMarketOrder' => false, // or they will return https://github.com/ccxt/ccxt/issues/2338
+                'fetchOpenOrders' => true,
+                'fetchOrder' => true,
+                'fetchOrderBook' => true,
+                'fetchTicker' => true,
+                'fetchTickers' => true,
+                'fetchTrades' => true,
+                'fetchWithdrawals' => true,
+                'publicAPI' => false,
                 'withdraw' => true,
             ),
             'timeframes' => array(
@@ -110,6 +116,7 @@ class bibox extends Exchange {
                 '2068' => '\\ccxt\\InvalidOrder', // The number of orders can not be less than
                 '2085' => '\\ccxt\\InvalidOrder', // Order quantity is too small
                 '3012' => '\\ccxt\\AuthenticationError', // invalid apiKey
+                '3016' => '\\ccxt\\BadSymbol', // Trading pair error
                 '3024' => '\\ccxt\\PermissionDenied', // wrong apikey permissions
                 '3025' => '\\ccxt\\AuthenticationError', // signature failed
                 '4000' => '\\ccxt\\ExchangeNotAvailable', // current network is unstable
@@ -370,15 +377,25 @@ class bibox extends Exchange {
         return $this->parse_order_book($response['result'], $this->safe_float($response['result'], 'update_time'), 'bids', 'asks', 'price', 'volume');
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
-        return [
-            $ohlcv['time'],
+    public function parse_ohlcv($ohlcv, $market = null) {
+        //
+        //     {
+        //         "time":1591448220000,
+        //         "open":"0.02507029",
+        //         "high":"0.02507029",
+        //         "low":"0.02506349",
+        //         "close":"0.02506349",
+        //         "vol":"5.92000000"
+        //     }
+        //
+        return array(
+            $this->safe_integer($ohlcv, 'time'),
             $this->safe_float($ohlcv, 'open'),
             $this->safe_float($ohlcv, 'high'),
             $this->safe_float($ohlcv, 'low'),
             $this->safe_float($ohlcv, 'close'),
             $this->safe_float($ohlcv, 'vol'),
-        ];
+        );
     }
 
     public function fetch_ohlcv($symbol, $timeframe = '1m', $since = null, $limit = 1000, $params = array ()) {
@@ -391,7 +408,19 @@ class bibox extends Exchange {
             'size' => $limit,
         );
         $response = $this->publicGetMdata (array_merge($request, $params));
-        return $this->parse_ohlcvs($response['result'], $market, $timeframe, $since, $limit);
+        //
+        //     {
+        //         "$result":array(
+        //             array("time":1591448220000,"open":"0.02507029","high":"0.02507029","low":"0.02506349","close":"0.02506349","vol":"5.92000000"),
+        //             array("time":1591448280000,"open":"0.02506449","high":"0.02506975","low":"0.02506108","close":"0.02506843","vol":"5.72000000"),
+        //             array("time":1591448340000,"open":"0.02506698","high":"0.02506698","low":"0.02506452","close":"0.02506519","vol":"4.86000000"),
+        //         ),
+        //         "cmd":"kline",
+        //         "ver":"1.1"
+        //     }
+        //
+        $result = $this->safe_value($response, 'result', array());
+        return $this->parse_ohlcvs($result, $market, $timeframe, $since, $limit);
     }
 
     public function fetch_currencies($params = array ()) {

@@ -713,7 +713,7 @@ module.exports = class upbit extends Exchange {
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
             'symbol': symbol,
-            'type': 'limit',
+            'type': undefined,
             'side': side,
             'takerOrMaker': undefined,
             'price': price,
@@ -759,19 +759,21 @@ module.exports = class upbit extends Exchange {
         return this.parseTrades (response, market, since, limit);
     }
 
-    parseOHLCV (ohlcv, market = undefined, timeframe = '1d', since = undefined, limit = undefined) {
+    parseOHLCV (ohlcv, market = undefined) {
         //
-        //       {                  market: "BTC-ETH",
-        //            candle_date_time_utc: "2018-11-22T13:47:00",
-        //            candle_date_time_kst: "2018-11-22T22:47:00",
-        //                   opening_price:  0.02915963,
-        //                      high_price:  0.02915963,
-        //                       low_price:  0.02915448,
-        //                     trade_price:  0.02915448,
-        //                       timestamp:  1542894473674,
-        //          candle_acc_trade_price:  0.0981629437535248,
-        //         candle_acc_trade_volume:  3.36693173,
-        //                            unit:  1                     },
+        //     {
+        //         market: "BTC-ETH",
+        //         candle_date_time_utc: "2018-11-22T13:47:00",
+        //         candle_date_time_kst: "2018-11-22T22:47:00",
+        //         opening_price: 0.02915963,
+        //         high_price: 0.02915963,
+        //         low_price: 0.02915448,
+        //         trade_price: 0.02915448,
+        //         timestamp: 1542894473674,
+        //         candle_acc_trade_price: 0.0981629437535248,
+        //         candle_acc_trade_volume: 3.36693173,
+        //         unit: 1
+        //     }
         //
         return [
             this.parse8601 (this.safeString (ohlcv, 'candle_date_time_utc')),
@@ -808,28 +810,34 @@ module.exports = class upbit extends Exchange {
         }
         const response = await this[method] (this.extend (request, params));
         //
-        //     [ {                  market: "BTC-ETH",
-        //            candle_date_time_utc: "2018-11-22T13:47:00",
-        //            candle_date_time_kst: "2018-11-22T22:47:00",
-        //                   opening_price:  0.02915963,
-        //                      high_price:  0.02915963,
-        //                       low_price:  0.02915448,
-        //                     trade_price:  0.02915448,
-        //                       timestamp:  1542894473674,
-        //          candle_acc_trade_price:  0.0981629437535248,
-        //         candle_acc_trade_volume:  3.36693173,
-        //                            unit:  1                     },
-        //       {                  market: "BTC-ETH",
-        //            candle_date_time_utc: "2018-11-22T10:06:00",
-        //            candle_date_time_kst: "2018-11-22T19:06:00",
-        //                   opening_price:  0.0294,
-        //                      high_price:  0.02940882,
-        //                       low_price:  0.02934283,
-        //                     trade_price:  0.02937354,
-        //                       timestamp:  1542881219276,
-        //          candle_acc_trade_price:  0.0762597110943884,
-        //         candle_acc_trade_volume:  2.5949617,
-        //                            unit:  1                     }  ]
+        //     [
+        //         {
+        //             market: "BTC-ETH",
+        //             candle_date_time_utc: "2018-11-22T13:47:00",
+        //             candle_date_time_kst: "2018-11-22T22:47:00",
+        //             opening_price: 0.02915963,
+        //             high_price: 0.02915963,
+        //             low_price: 0.02915448,
+        //             trade_price: 0.02915448,
+        //             timestamp: 1542894473674,
+        //             candle_acc_trade_price: 0.0981629437535248,
+        //             candle_acc_trade_volume: 3.36693173,
+        //             unit: 1
+        //         },
+        //         {
+        //             market: "BTC-ETH",
+        //             candle_date_time_utc: "2018-11-22T10:06:00",
+        //             candle_date_time_kst: "2018-11-22T19:06:00",
+        //             opening_price: 0.0294,
+        //             high_price: 0.02940882,
+        //             low_price: 0.02934283,
+        //             trade_price: 0.02937354,
+        //             timestamp: 1542881219276,
+        //             candle_acc_trade_price: 0.0762597110943884,
+        //             candle_acc_trade_volume: 2.5949617,
+        //             unit: 1
+        //         }
+        //     ]
         //
         return this.parseOHLCVs (response, market, timeframe, since, limit);
     }
@@ -1168,7 +1176,10 @@ module.exports = class upbit extends Exchange {
             feeCurrency = quote;
         }
         let trades = this.safeValue (order, 'trades', []);
-        trades = this.parseTrades (trades, market, undefined, undefined, { 'order': id });
+        trades = this.parseTrades (trades, market, undefined, undefined, {
+            'order': id,
+            'type': type,
+        });
         const numTrades = trades.length;
         if (numTrades > 0) {
             // the timestamp in fetchOrder trades is missing
@@ -1324,9 +1335,11 @@ module.exports = class upbit extends Exchange {
     }
 
     parseDepositAddresses (addresses) {
-        const result = [];
+        const result = {};
         for (let i = 0; i < addresses.length; i++) {
-            result.push (this.parseDepositAddress (addresses[i]));
+            const address = this.parseDepositAddress (addresses[i]);
+            const code = address['currency'];
+            result[code] = address;
         }
         return result;
     }
@@ -1504,7 +1517,7 @@ module.exports = class upbit extends Exchange {
             return; // fallback to default error handler
         }
         //
-        //   { 'error': { 'message': "Missing request parameter error. Check the required parameters!", 'name':  400 } },
+        //   { 'error': { 'message': "Missing request parameter error. Check the required parameters!", 'name': 400 } },
         //   { 'error': { 'message': "side is missing, side does not have a valid value", 'name': "validation_error" } },
         //   { 'error': { 'message': "개인정보 제 3자 제공 동의가 필요합니다.", 'name': "thirdparty_agreement_required" } },
         //   { 'error': { 'message': "권한이 부족합니다.", 'name': "out_of_scope" } },

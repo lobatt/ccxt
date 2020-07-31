@@ -3,7 +3,7 @@
 //  ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { AuthenticationError, ExchangeError, PermissionDenied, ExchangeNotAvailable, InvalidOrder, OrderNotFound, InsufficientFunds, ArgumentsRequired, BadSymbol, BadRequest, RequestTimeout } = require ('./base/errors');
+const { AuthenticationError, ExchangeError, PermissionDenied, ExchangeNotAvailable, OnMaintenance, InvalidOrder, OrderNotFound, InsufficientFunds, ArgumentsRequired, BadSymbol, BadRequest, RequestTimeout } = require ('./base/errors');
 
 //  ---------------------------------------------------------------------------
 
@@ -21,20 +21,27 @@ module.exports = class huobipro extends Exchange {
             'hostname': 'api.huobi.pro', // api.testnet.huobi.pro
             'pro': true,
             'has': {
+                'cancelOrder': true,
                 'CORS': false,
-                'fetchTickers': true,
-                'fetchDepositAddress': true,
-                'fetchOHLCV': true,
-                'fetchOrder': true,
-                'fetchOrders': true,
-                'fetchOpenOrders': true,
+                'createOrder': true,
+                'fetchBalance': true,
                 'fetchClosedOrders': true,
-                'fetchTradingLimits': true,
-                'fetchMyTrades': true,
-                'withdraw': true,
                 'fetchCurrencies': true,
+                'fetchDepositAddress': true,
                 'fetchDeposits': true,
+                'fetchMarkets': true,
+                'fetchMyTrades': true,
+                'fetchOHLCV': true,
+                'fetchOpenOrders': true,
+                'fetchOrder': true,
+                'fetchOrderBook': true,
+                'fetchOrders': true,
+                'fetchTicker': true,
+                'fetchTickers': true,
+                'fetchTrades': true,
+                'fetchTradingLimits': true,
                 'fetchWithdrawals': true,
+                'withdraw': true,
             },
             'timeframes': {
                 '1m': '1min',
@@ -75,6 +82,7 @@ module.exports = class huobipro extends Exchange {
                 },
                 'v2Private': {
                     'get': [
+                        'account/ledger',
                         'account/withdraw/quota',
                         'account/deposit/address',
                         'reference/transact-fee-rate',
@@ -184,6 +192,7 @@ module.exports = class huobipro extends Exchange {
                     'invalid symbol': BadSymbol, // {"ts":1568813334794,"status":"error","err-code":"invalid-parameter","err-msg":"invalid symbol"}
                     'invalid-parameter': BadRequest, // {"ts":1576210479343,"status":"error","err-code":"invalid-parameter","err-msg":"symbol trade not open now"}
                     'base-symbol-trade-disabled': BadSymbol, // {"status":"error","err-code":"base-symbol-trade-disabled","err-msg":"Trading is disabled for this symbol","data":null}
+                    'system-maintenance': OnMaintenance, // {"status": "error", "err-code": "system-maintenance", "err-msg": "System is in maintenance!", "data": null}
                 },
             },
             'options': {
@@ -334,6 +343,8 @@ module.exports = class huobipro extends Exchange {
 
     parseTicker (ticker, market = undefined) {
         //
+        // fetchTicker
+        //
         //     {
         //         "amount": 26228.672978342216,
         //         "open": 9078.95,
@@ -348,25 +359,47 @@ module.exports = class huobipro extends Exchange {
         //         "bid": [ 9146.86, 0.080758 ],
         //     }
         //
+        // fetchTickers
+        //     {
+        //         symbol: "bhdht",
+        //         open:  2.3938,
+        //         high:  2.4151,
+        //         low:  2.3323,
+        //         close:  2.3909,
+        //         amount:  628.992,
+        //         vol:  1493.71841095,
+        //         count:  2088,
+        //         bid:  2.3643,
+        //         bidSize:  0.7136,
+        //         ask:  2.4061,
+        //         askSize:  0.4156
+        //     }
+        //
         let symbol = undefined;
         if (market !== undefined) {
             symbol = market['symbol'];
         }
         const timestamp = this.safeInteger (ticker, 'ts');
         let bid = undefined;
-        let ask = undefined;
         let bidVolume = undefined;
+        let ask = undefined;
         let askVolume = undefined;
         if ('bid' in ticker) {
             if (Array.isArray (ticker['bid'])) {
                 bid = this.safeFloat (ticker['bid'], 0);
                 bidVolume = this.safeFloat (ticker['bid'], 1);
+            } else {
+                bid = this.safeFloat (ticker, 'bid');
+                bidVolume = this.safeValue (ticker, 'bidSize');
             }
         }
         if ('ask' in ticker) {
             if (Array.isArray (ticker['ask'])) {
                 ask = this.safeFloat (ticker['ask'], 0);
                 askVolume = this.safeFloat (ticker['ask'], 1);
+            } else {
+                ask = this.safeFloat (ticker, 'ask');
+                askVolume = this.safeValue (ticker, 'askSize');
             }
         }
         const open = this.safeFloat (ticker, 'open');
@@ -655,7 +688,19 @@ module.exports = class huobipro extends Exchange {
         return this.filterBySymbolSinceLimit (result, symbol, since, limit);
     }
 
-    parseOHLCV (ohlcv, market = undefined, timeframe = '1m', since = undefined, limit = undefined) {
+    parseOHLCV (ohlcv, market = undefined) {
+        //
+        //     {
+        //         "amount":1.2082,
+        //         "open":0.025096,
+        //         "close":0.025095,
+        //         "high":0.025096,
+        //         "id":1591515300,
+        //         "count":6,
+        //         "low":0.025095,
+        //         "vol":0.0303205097
+        //     }
+        //
         return [
             this.safeTimestamp (ohlcv, 'id'),
             this.safeFloat (ohlcv, 'open'),
@@ -677,7 +722,20 @@ module.exports = class huobipro extends Exchange {
             request['size'] = limit;
         }
         const response = await this.marketGetHistoryKline (this.extend (request, params));
-        return this.parseOHLCVs (response['data'], market, timeframe, since, limit);
+        //
+        //     {
+        //         "status":"ok",
+        //         "ch":"market.ethbtc.kline.1min",
+        //         "ts":1591515374371,
+        //         "data":[
+        //             {"amount":0.0,"open":0.025095,"close":0.025095,"high":0.025095,"id":1591515360,"count":0,"low":0.025095,"vol":0.0},
+        //             {"amount":1.2082,"open":0.025096,"close":0.025095,"high":0.025096,"id":1591515300,"count":6,"low":0.025095,"vol":0.0303205097},
+        //             {"amount":0.0648,"open":0.025096,"close":0.025096,"high":0.025096,"id":1591515240,"count":2,"low":0.025096,"vol":0.0016262208},
+        //         ]
+        //     }
+        //
+        const data = this.safeValue (response, 'data', []);
+        return this.parseOHLCVs (data, market, timeframe, since, limit);
     }
 
     async fetchAccounts (params = {}) {

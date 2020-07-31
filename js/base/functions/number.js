@@ -95,10 +95,13 @@ const decimalToPrecision = (x, roundingMode
                              , countingMode       = DECIMAL_PLACES
                              , paddingMode        = NO_PADDING) => {
 
-    if (numPrecisionDigits < 0) {
-        if (countingMode === TICK_SIZE) {
-            throw new Error (`TICK_SIZE cant be used with negative numPrecisionDigits`)
+    if (countingMode === TICK_SIZE) {
+        if (numPrecisionDigits <= 0) {
+            throw new Error ('TICK_SIZE cant be used with negative or zero numPrecisionDigits')
         }
+    }
+
+    if (numPrecisionDigits < 0) {
         const toNearest = Math.pow (10, -numPrecisionDigits)
         if (roundingMode === ROUND) {
             return (toNearest * decimalToPrecision (x / toNearest, roundingMode, 0, countingMode, paddingMode)).toString ()
@@ -110,7 +113,7 @@ const decimalToPrecision = (x, roundingMode
 
 /*  handle tick size */
     if (countingMode === TICK_SIZE) {
-        const precisionDigitsString = decimalToPrecision (numPrecisionDigits, ROUND, 100, DECIMAL_PLACES, NO_PADDING)
+        const precisionDigitsString = decimalToPrecision (numPrecisionDigits, ROUND, 22, DECIMAL_PLACES, NO_PADDING)
         const newNumPrecisionDigits = precisionFromString (precisionDigitsString)
         let missing = x % numPrecisionDigits
         // See: https://github.com/ccxt/ccxt/pull/6486

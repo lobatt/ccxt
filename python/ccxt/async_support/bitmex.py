@@ -28,17 +28,26 @@ class bitmex(Exchange):
             'rateLimit': 2000,
             'pro': True,
             'has': {
+                'cancelAllOrders': True,
+                'cancelOrder': True,
                 'CORS': False,
-                'fetchOHLCV': True,
-                'withdraw': True,
+                'createOrder': True,
                 'editOrder': True,
-                'fetchOrder': True,
-                'fetchOrders': True,
-                'fetchOpenOrders': True,
+                'fetchBalance': True,
                 'fetchClosedOrders': True,
-                'fetchMyTrades': True,
                 'fetchLedger': True,
+                'fetchMarkets': True,
+                'fetchMyTrades': True,
+                'fetchOHLCV': True,
+                'fetchOpenOrders': True,
+                'fetchOrder': True,
+                'fetchOrderBook': True,
+                'fetchOrders': True,
+                'fetchTicker': True,
+                'fetchTickers': True,
+                'fetchTrades': True,
                 'fetchTransactions': 'emulated',
+                'withdraw': True,
             },
             'timeframes': {
                 '1m': '1m',
@@ -108,6 +117,7 @@ class bitmex(Exchange):
                         'user/checkReferralCode',
                         'user/commission',
                         'user/depositAddress',
+                        'user/executionHistory',
                         'user/margin',
                         'user/minWithdrawalFee',
                         'user/wallet',
@@ -271,8 +281,8 @@ class bitmex(Exchange):
             account['free'] = self.safe_float(balance, 'availableMargin')
             account['total'] = self.safe_float(balance, 'marginBalance')
             if code == 'BTC':
-                account['free'] = account['free'] * 0.00000001
-                account['total'] = account['total'] * 0.00000001
+                account['free'] = account['free'] / 100000000
+                account['total'] = account['total'] / 100000000
             result[code] = account
         return self.parse_balance(result)
 
@@ -486,7 +496,7 @@ class bitmex(Exchange):
         code = self.safe_currency_code(currencyId, currency)
         amount = self.safe_float(item, 'amount')
         if amount is not None:
-            amount = amount * 1e-8
+            amount = amount / 100000000
         timestamp = self.parse8601(self.safe_string(item, 'transactTime'))
         if timestamp is None:
             # https://github.com/ccxt/ccxt/issues/6047
@@ -495,14 +505,14 @@ class bitmex(Exchange):
             timestamp = 0  # see comments above
         feeCost = self.safe_float(item, 'fee', 0)
         if feeCost is not None:
-            feeCost = feeCost * 1e-8
+            feeCost = feeCost / 100000000
         fee = {
             'cost': feeCost,
             'currency': code,
         }
         after = self.safe_float(item, 'walletBalance')
         if after is not None:
-            after = after * 1e-8
+            after = after / 100000000
         before = self.sum(after, -amount)
         direction = None
         if amount < 0:
@@ -629,10 +639,10 @@ class bitmex(Exchange):
             addressTo = address
         amount = self.safe_integer(transaction, 'amount')
         if amount is not None:
-            amount = abs(amount) * 1e-8
+            amount = abs(amount) / 10000000
         feeCost = self.safe_integer(transaction, 'fee')
         if feeCost is not None:
-            feeCost = feeCost * 1e-8
+            feeCost = feeCost / 10000000
         fee = {
             'cost': feeCost,
             'currency': 'BTC',
@@ -828,10 +838,26 @@ class bitmex(Exchange):
             'info': ticker,
         }
 
-    def parse_ohlcv(self, ohlcv, market=None, timeframe='1m', since=None, limit=None):
-        timestamp = self.parse8601(self.safe_string(ohlcv, 'timestamp'))
+    def parse_ohlcv(self, ohlcv, market=None):
+        #
+        #     {
+        #         "timestamp":"2015-09-25T13:38:00.000Z",
+        #         "symbol":"XBTUSD",
+        #         "open":237.45,
+        #         "high":237.45,
+        #         "low":237.45,
+        #         "close":237.45,
+        #         "trades":0,
+        #         "volume":0,
+        #         "vwap":null,
+        #         "lastSize":null,
+        #         "turnover":0,
+        #         "homeNotional":0,
+        #         "foreignNotional":0
+        #     }
+        #
         return [
-            timestamp,
+            self.parse8601(self.safe_string(ohlcv, 'timestamp')),
             self.safe_float(ohlcv, 'open'),
             self.safe_float(ohlcv, 'high'),
             self.safe_float(ohlcv, 'low'),
@@ -869,7 +895,16 @@ class bitmex(Exchange):
                 timestamp = self.sum(timestamp, duration)
             ymdhms = self.ymdhms(timestamp)
             request['startTime'] = ymdhms  # starting date filter for results
+        else:
+            request['reverse'] = True
         response = await self.publicGetTradeBucketed(self.extend(request, params))
+        #
+        #     [
+        #         {"timestamp":"2015-09-25T13:38:00.000Z","symbol":"XBTUSD","open":237.45,"high":237.45,"low":237.45,"close":237.45,"trades":0,"volume":0,"vwap":null,"lastSize":null,"turnover":0,"homeNotional":0,"foreignNotional":0},
+        #         {"timestamp":"2015-09-25T13:39:00.000Z","symbol":"XBTUSD","open":237.45,"high":237.45,"low":237.45,"close":237.45,"trades":0,"volume":0,"vwap":null,"lastSize":null,"turnover":0,"homeNotional":0,"foreignNotional":0},
+        #         {"timestamp":"2015-09-25T13:40:00.000Z","symbol":"XBTUSD","open":237.45,"high":237.45,"low":237.45,"close":237.45,"trades":0,"volume":0,"vwap":null,"lastSize":null,"turnover":0,"homeNotional":0,"foreignNotional":0}
+        #     ]
+        #
         result = self.parse_ohlcvs(response, market, timeframe, since, limit)
         if fetchOHLCVOpenTimestamp:
             # bitmex returns the candle's close timestamp - https://github.com/ccxt/ccxt/issues/4446
@@ -1074,6 +1109,9 @@ class bitmex(Exchange):
         }
         if since is not None:
             request['startTime'] = self.iso8601(since)
+        else:
+            # by default reverse=false, i.e. trades are fetched since the time of market inception(year 2015 for XBTUSD)
+            request['reverse'] = True
         if limit is not None:
             request['count'] = limit
         response = await self.publicGetTrade(self.extend(request, params))
@@ -1117,6 +1155,10 @@ class bitmex(Exchange):
         }
         if price is not None:
             request['price'] = price
+        clientOrderId = self.safe_string_2(params, 'clOrdID', 'clientOrderId')
+        if clientOrderId is not None:
+            request['clOrdID'] = clientOrderId
+            params = self.omit(params, ['clOrdID', 'clientOrderId'])
         response = await self.privatePostOrder(self.extend(request, params))
         order = self.parse_order(response)
         id = self.safe_string(order, 'id')
@@ -1125,9 +1167,16 @@ class bitmex(Exchange):
 
     async def edit_order(self, id, symbol, type, side, amount=None, price=None, params={}):
         await self.load_markets()
-        request = {
-            'orderID': id,
-        }
+        request = {}
+        origClOrdID = self.safe_string_2(params, 'origClOrdID', 'clientOrderId')
+        if origClOrdID is not None:
+            request['origClOrdID'] = origClOrdID
+            clientOrderId = self.safe_string(params, 'clOrdID', 'clientOrderId')
+            if clientOrderId is not None:
+                request['clOrdID'] = clientOrderId
+            params = self.omit(params, ['origClOrdID', 'clOrdID', 'clientOrderId'])
+        else:
+            request['orderID'] = id
         if amount is not None:
             request['orderQty'] = amount
         if price is not None:
@@ -1140,14 +1189,15 @@ class bitmex(Exchange):
     async def cancel_order(self, id, symbol=None, params={}):
         await self.load_markets()
         # https://github.com/ccxt/ccxt/issues/6507
-        clOrdID = self.safe_value(params, 'clOrdID')
+        clientOrderId = self.safe_string_2(params, 'clOrdID', 'clientOrderId')
         request = {}
-        if clOrdID is None:
+        if clientOrderId is None:
             request['orderID'] = id
         else:
-            request['clOrdID'] = clOrdID
+            request['clOrdID'] = clientOrderId
+            params = self.omit(params, ['clOrdID', 'clientOrderId'])
         response = await self.privateDeleteOrder(self.extend(request, params))
-        order = response[0]
+        order = self.safe_value(response, 0, {})
         error = self.safe_string(order, 'error')
         if error is not None:
             if error.find('Unable to cancel order due to existing state') >= 0:
@@ -1155,6 +1205,55 @@ class bitmex(Exchange):
         order = self.parse_order(order)
         self.orders[order['id']] = order
         return self.extend({'info': response}, order)
+
+    async def cancel_all_orders(self, symbol=None, params={}):
+        await self.load_markets()
+        request = {}
+        market = None
+        if symbol is not None:
+            market = self.market(symbol)
+            request['symbol'] = market['id']
+        response = await self.privateDeleteOrderAll(self.extend(request, params))
+        #
+        #     [
+        #         {
+        #             "orderID": "string",
+        #             "clOrdID": "string",
+        #             "clOrdLinkID": "string",
+        #             "account": 0,
+        #             "symbol": "string",
+        #             "side": "string",
+        #             "simpleOrderQty": 0,
+        #             "orderQty": 0,
+        #             "price": 0,
+        #             "displayQty": 0,
+        #             "stopPx": 0,
+        #             "pegOffsetValue": 0,
+        #             "pegPriceType": "string",
+        #             "currency": "string",
+        #             "settlCurrency": "string",
+        #             "ordType": "string",
+        #             "timeInForce": "string",
+        #             "execInst": "string",
+        #             "contingencyType": "string",
+        #             "exDestination": "string",
+        #             "ordStatus": "string",
+        #             "triggered": "string",
+        #             "workingIndicator": True,
+        #             "ordRejReason": "string",
+        #             "simpleLeavesQty": 0,
+        #             "leavesQty": 0,
+        #             "simpleCumQty": 0,
+        #             "cumQty": 0,
+        #             "avgPx": 0,
+        #             "multiLegReportingType": "string",
+        #             "text": "string",
+        #             "transactTime": "2020-06-01T09:36:35.290Z",
+        #             "timestamp": "2020-06-01T09:36:35.290Z"
+        #         }
+        #     ]
+        #
+        return self.parse_orders(response, market)
 
     def is_fiat(self, currency):
         if currency == 'EUR':

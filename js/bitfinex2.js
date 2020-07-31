@@ -346,7 +346,7 @@ module.exports = class bitfinex2 extends bitfinex {
             quoteId = this.getCurrencyId (quoteId);
             const precision = {
                 'price': this.safeInteger (market, 'price_precision'),
-                'amount': this.safeInteger (market, 'price_precision'),
+                'amount': 8, // https://github.com/ccxt/ccxt/issues/7310
             };
             const limits = {
                 'amount': {
@@ -690,22 +690,32 @@ module.exports = class bitfinex2 extends bitfinex {
             'limit': limit,
         };
         const response = await this.publicGetCandlesTradeTimeframeSymbolHist (this.extend (request, params));
+        //
+        //     [
+        //         [1591503840000,0.025069,0.025068,0.025069,0.025068,1.97828998],
+        //         [1591504500000,0.025065,0.025065,0.025065,0.025065,1.0164],
+        //         [1591504620000,0.025062,0.025062,0.025062,0.025062,0.5],
+        //     ]
+        //
         return this.parseOHLCVs (response, market, timeframe, since, limit);
     }
 
     parseOrderStatus (status) {
+        if (status === undefined) {
+            return status;
+        }
+        const parts = status.split (' ');
+        const state = this.safeString (parts, 0);
         const statuses = {
             'ACTIVE': 'open',
-            'PARTIALLY FILLED': 'open',
+            'PARTIALLY': 'open',
             'EXECUTED': 'closed',
             'CANCELED': 'canceled',
-            'CANCELED was: PARTIALLY FILLED': 'canceled',
-            'INSUFFICIENT MARGIN': 'canceled',
-            'INSUFFICIENT BALANCE (G1) was: PARTIALLY FILLED': 'canceled',
+            'INSUFFICIENT': 'canceled',
             'RSN_DUST': 'rejected',
             'RSN_PAUSE': 'rejected',
         };
-        return this.safeString (statuses, status, status);
+        return this.safeString (statuses, state, status);
     }
 
     parseOrder (order, market = undefined) {
@@ -774,6 +784,11 @@ module.exports = class bitfinex2 extends bitfinex {
         };
         if (type !== 'market') {
             request['price'] = this.numberToString (price);
+        }
+        const clientOrderId = this.safeValue2 (params, 'cid', 'clientOrderId');
+        if (clientOrderId !== undefined) {
+            request['cid'] = clientOrderId;
+            params = this.omit (params, [ 'cid', 'clientOrderId' ]);
         }
         const response = await this.privatePostAuthWOrderSubmit (this.extend (request, params));
         //
@@ -844,17 +859,18 @@ module.exports = class bitfinex2 extends bitfinex {
     }
 
     async cancelOrder (id, symbol = undefined, params = {}) {
-        const cid = this.safeValue (params, 'cid'); // client order id
+        const cid = this.safeValue2 (params, 'cid', 'clientOrderId'); // client order id
         let request = undefined;
         if (cid !== undefined) {
             const cidDate = this.safeValue (params, 'cidDate'); // client order id date
             if (cidDate === undefined) {
-                throw new InvalidOrder (this.id + " canceling an order by client order id ('cid') requires both 'cid' and 'cid_date' ('YYYY-MM-DD')");
+                throw new InvalidOrder (this.id + " canceling an order by clientOrderId ('cid') requires both 'cid' and 'cid_date' ('YYYY-MM-DD')");
             }
             request = {
                 'cid': cid,
                 'cid_date': cidDate,
             };
+            params = this.omit (params, [ 'cid', 'clientOrderId' ]);
         } else {
             request = {
                 'id': parseInt (id),
@@ -1059,14 +1075,19 @@ module.exports = class bitfinex2 extends bitfinex {
             id = undefined;
             status = 'failed';
         }
+        const tag = this.safeString (data, 3);
         return {
             'info': transaction,
             'id': id,
             'txid': undefined,
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
+            'addressFrom': undefined,
             'address': undefined, // this is actually the tag for XRP transfers (the address is missing)
-            'tag': this.safeString (data, 3), // refix it properly for the tag from description
+            'addressTo': undefined,
+            'tagFrom': undefined,
+            'tag': tag, // refix it properly for the tag from description
+            'tagTo': tag,
             'type': 'withdrawal',
             'amount': amount,
             'currency': code,

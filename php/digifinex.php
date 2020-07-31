@@ -20,14 +20,22 @@ class digifinex extends Exchange {
             'version' => 'v3',
             'rateLimit' => 900, // 300 for posts
             'has' => array(
+                'cancelOrder' => true,
                 'cancelOrders' => true,
-                'fetchOrders' => true,
+                'createOrder' => true,
+                'fetchBalance' => true,
+                'fetchLedger' => true,
+                'fetchMarkets' => true,
+                'fetchMyTrades' => true,
                 'fetchOHLCV' => true,
                 'fetchOpenOrders' => true,
                 'fetchOrder' => true,
+                'fetchOrderBook' => true,
+                'fetchOrders' => true,
+                'fetchTicker' => true,
                 'fetchTickers' => true,
-                'fetchMyTrades' => true,
-                'fetchLedger' => true,
+                'fetchTime' => true,
+                'fetchTrades' => true,
             ),
             'timeframes' => array(
                 '1m' => '1',
@@ -41,14 +49,14 @@ class digifinex extends Exchange {
                 '1w' => '1W',
             ),
             'urls' => array(
-                'logo' => 'https://user-images.githubusercontent.com/1294454/62184319-304e8880-b366-11e9-99fe-8011d6929195.jpg',
-                'api' => 'https://openapi.digifinex.vip',
-                'www' => 'https://www.digifinex.vip',
+                'logo' => 'https://user-images.githubusercontent.com/51840849/87443315-01283a00-c5fe-11ea-8628-c2a0feaf07ac.jpg',
+                'api' => 'https://openapi.digifinex.com',
+                'www' => 'https://www.digifinex.com',
                 'doc' => array(
-                    'https://docs.digifinex.vip',
+                    'https://docs.digifinex.com',
                 ),
                 'fees' => 'https://digifinex.zendesk.com/hc/en-us/articles/360000328422-Fee-Structure-on-DigiFinex',
-                'referral' => 'https://www.digifinex.vip/en-ww/from/DhOzBg/3798****5114',
+                'referral' => 'https://www.digifinex.com/en-ww/from/DhOzBg/3798****5114',
             ),
             'api' => array(
                 'v2' => array(
@@ -68,6 +76,7 @@ class digifinex extends Exchange {
                         'spot/symbols',
                         'time',
                         'trades',
+                        'trades/symbols',
                     ),
                 ),
                 'private' => array(
@@ -154,30 +163,35 @@ class digifinex extends Exchange {
         ));
     }
 
-    public function fetch_markets_by_type($type, $params = array ()) {
-        $method = 'publicGet' . $this->capitalize($type) . 'Symbols';
-        $response = $this->$method ($params);
+    public function fetch_markets($params = array ()) {
+        $options = $this->safe_value($this->options, 'fetchMarkets', array());
+        $method = $this->safe_string($options, 'method', 'fetch_markets_v2');
+        return $this->$method ($params);
+    }
+
+    public function fetch_markets_v2($params = array ()) {
+        $response = $this->publicGetTradesSymbols ($params);
         //
         //     {
-        //         "symbol_list" => [
-        //             array(
+        //         "symbol_list":[
+        //             {
         //                 "order_types":["LIMIT","MARKET"],
         //                 "quote_asset":"USDT",
         //                 "minimum_value":2,
         //                 "amount_precision":4,
         //                 "$status":"TRADING",
-        //                 "minimum_amount":0.001,
-        //                 "$symbol":"LTC_USDT",
-        //                 "margin_rate":0.3,
+        //                 "minimum_amount":0.0001,
+        //                 "$symbol":"BTC_USDT",
+        //                 "is_allow":1,
         //                 "zone":"MAIN",
-        //                 "base_asset":"LTC",
+        //                 "base_asset":"BTC",
         //                 "price_precision":2
-        //             ),
+        //             }
         //         ],
         //         "code":0
         //     }
         //
-        $markets = $this->safe_value($response, 'symbols_list', array());
+        $markets = $this->safe_value($response, 'symbol_list', array());
         $result = array();
         for ($i = 0; $i < count($markets); $i++) {
             $market = $markets[$i];
@@ -215,7 +229,9 @@ class digifinex extends Exchange {
             // $status = $this->safe_string($market, 'status');
             // $active = ($status === 'TRADING');
             //
-            $active = null;
+            $isAllowed = $this->safe_value($market, 'is_allow', 1);
+            $active = $isAllowed ? true : false;
+            $type = 'spot';
             $spot = ($type === 'spot');
             $margin = ($type === 'margin');
             $result[] = array(
@@ -237,7 +253,7 @@ class digifinex extends Exchange {
         return $result;
     }
 
-    public function fetch_markets($params = array ()) {
+    public function fetch_markets_v1($params = array ()) {
         $response = $this->publicGetMarkets ($params);
         //
         //     {
@@ -585,6 +601,17 @@ class digifinex extends Exchange {
         );
     }
 
+    public function fetch_time($params = array ()) {
+        $response = $this->publicGetTime ($params);
+        //
+        //     {
+        //         "server_time" => 1589873762,
+        //         "code" => 0
+        //     }
+        //
+        return $this->safe_timestamp($response, 'server_time');
+    }
+
     public function fetch_trades($symbol, $since = null, $limit = null, $params = array ()) {
         $this->load_markets();
         $market = $this->market($symbol);
@@ -621,15 +648,25 @@ class digifinex extends Exchange {
         return $this->parse_trades($data, $market, $since, $limit);
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
-        return [
-            $ohlcv[0] * 1000, // timestamp
-            $ohlcv[5], // open
-            $ohlcv[3], // high
-            $ohlcv[4], // low
-            $ohlcv[2], // close
-            $ohlcv[1], // volume
-        ];
+    public function parse_ohlcv($ohlcv, $market = null) {
+        //
+        //     array(
+        //         1556712900,
+        //         2205.899,
+        //         0.029967,
+        //         0.02997,
+        //         0.029871,
+        //         0.029927
+        //     )
+        //
+        return array(
+            $this->safe_timestamp($ohlcv, 0),
+            $this->safe_float($ohlcv, 5), // open
+            $this->safe_float($ohlcv, 3), // high
+            $this->safe_float($ohlcv, 4), // low
+            $this->safe_float($ohlcv, 2), // close
+            $this->safe_float($ohlcv, 1), // volume
+        );
     }
 
     public function fetch_ohlcv($symbol, $timeframe = '1m', $since = null, $limit = null, $params = array ()) {

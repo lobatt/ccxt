@@ -167,6 +167,11 @@ class Transpiler {
             [ /typeof\s+(.+?)\s+\=\=\=?\s+\'undefined\'/g, '$1 is None' ],
             [ /typeof\s+(.+?)\s+\!\=\=?\s+\'undefined\'/g, '$1 is not None' ],
 
+            [ /typeof\s+([^\s\[]+)(?:\s|\[(.+?)\])\s+\=\=\=?\s+\'number\'/g, "isinstance($1[$2], numbers.Real)" ],
+            [ /typeof\s+([^\s\[]+)(?:\s|\[(.+?)\])\s+\!\=\=?\s+\'number\'/g, "isinstance($1[$2], numbers.Real)'" ],
+            [ /typeof\s+([^\s]+)\s+\=\=\=?\s+\'number\'/g, "isinstance($1, numbers.Real)" ],
+            [ /typeof\s+([^\s]+)\s+\!\=\=?\s+\'number\'/g, "isinstance($1, numbers.Real)" ],
+
             [ /([^\s\[]+)(?:\s|\[(.+?)\])\s+\=\=\=?\s+undefined/g, '$1[$2] is None' ],
             [ /([^\s\[]+)(?:\s|\[(.+?)\])\s+\!\=\=?\s+undefined/g, '$1[$2] is not None' ],
             [ /([^\s]+)\s+\=\=\=?\s+undefined/g, '$1 is None' ],
@@ -186,7 +191,9 @@ class Transpiler {
             [ /this\.binaryToBase16\s/g, 'base64.b16encode' ],
             [ /this\.base64ToBinary\s/g, 'base64.b64decode' ],
             [ /\.shift\s*\(\)/g, '.pop(0)' ],
-            [ /Number\.MAX_SAFE_INTEGER/g, 'float(\'inf\')']
+            [ /Number\.MAX_SAFE_INTEGER/g, 'float(\'inf\')'],
+            [ /function\s*(\w+\s*\([^)]+\))\s*{/g, 'def $1:'],
+            [ /assert\s*\((.+)\);/g, 'assert $1'],
 
         // insert common regexes in the middle (critical)
         ].concat (this.getCommonRegexes ()).concat ([
@@ -199,6 +206,7 @@ class Transpiler {
             [ /(^|[^a-zA-Z0-9_])(?:let|const|var)\s/g, '$1' ],
             [ /Object\.keys\s*\((.*)\)\.length/g, '$1' ],
             [ /Object\.keys\s*\((.*)\)/g, 'list($1.keys())' ],
+            [ /Object\.values\s*\((.*)\)/g, 'list($1.values())' ],
             [ /\[([^\]]+)\]\.join\s*\(([^\)]+)\)/g, "$2.join([$1])" ],
             [ /hash \(([^,]+)\, \'(sha[0-9])\'/g, "hash($1, '$2'" ],
             [ /hmac \(([^,]+)\, ([^,]+)\, \'(md5)\'/g, 'hmac($1, $2, hashlib.$3' ],
@@ -219,7 +227,6 @@ class Transpiler {
             [ /\s\|\|\s/g, ' or ' ],
             [ /\s\&\&\s/g, ' and ' ],
             [ /\!([^\='"])/g, 'not $1'],
-            [ /([^\s(]+)\.length/g, 'len($1)' ],
             [ /\.push\s*\(([\s\S]+?)\);/g, '.append($1);' ],
             [ /^(\s*}\s*$)+/gm, '' ],
             [ /\;(\s+?\/\/.+?)/g, '$1' ],
@@ -237,6 +244,7 @@ class Transpiler {
             [ /self\[([^\]+]+)\]/g, 'getattr(self, $1)' ],
             [ /([^\s]+)\.slice \(([^\,\)]+)\,\s?([^\)]+)\)/g, '$1[$2:$3]' ],
             [ /([^\s]+)\.slice \(([^\)\:]+)\)/g, '$1[$2:]' ],
+            [ /([^\s(:]+)\.length/g, 'len($1)' ],
             [ /Math\.floor\s*\(([^\)]+)\)/g, 'int(math.floor($1))' ],
             [ /Math\.abs\s*\(([^\)]+)\)/g, 'abs($1)' ],
             [ /Math\.pow\s*\(([^\)]+)\)/g, 'math.pow($1)' ],
@@ -301,6 +309,11 @@ class Transpiler {
             [ /typeof\s+([^\s]+)\s+\=\=\=?\s+\'string\'/g, "gettype($1) === 'string'" ],
             [ /typeof\s+([^\s]+)\s+\!\=\=?\s+\'string\'/g, "gettype($1) !== 'string'" ],
 
+            [ /typeof\s+([^\s\[]+)(?:\s|\[(.+?)\])\s+\=\=\=?\s+\'number\'/g, "(is_float($1[$2]) || is_int($1[$2]))" ], // same as above but for number
+            [ /typeof\s+([^\s\[]+)(?:\s|\[(.+?)\])\s+\!\=\=?\s+\'number\'/g, "(is_float($1[$2]) || is_int($1[$2]))'" ],
+            [ /typeof\s+([^\s]+)\s+\=\=\=?\s+\'number\'/g, "(is_float($1) || is_int($1))" ],
+            [ /typeof\s+([^\s]+)\s+\!\=\=?\s+\'number\'/g, "(is_float($1) || is_int($1))" ],
+
             [ /undefined/g, 'null' ],
             [ /this\.extend\s/g, 'array_merge' ],
             [ /this\.stringToBinary\s*\((.*)\)/g, '$1' ],
@@ -330,6 +343,7 @@ class Transpiler {
             [ /(^|[^a-zA-Z0-9_])(?:let|const|var)\s/g, '$1' ],
             [ /Object\.keys\s*\((.*)\)\.length/g, '$1' ],
             [ /Object\.keys\s*\((.*)\)/g, 'is_array($1) ? array_keys($1) : array()' ],
+            [ /Object\.values\s*\((.*)\)/g, 'is_array($1) ? array_values($1) : array()' ],
             [ /([^\s]+\s*\(\))\.toString \(\)/g, '(string) $1' ],
             [ /([^\s]+)\.toString \(\)/g, '(string) $1' ],
             [ /throw new Error \((.*)\)/g, 'throw new \\Exception($1)' ],
@@ -340,13 +354,12 @@ class Transpiler {
             [ /for\s+\(([a-zA-Z0-9_]+)\s*=\s*([^\;\s]+\s*)\;[^\<\>\=]+(\<=|\>=|<|>)\s*(.*)\.length\s*\;([^\)]+)\)\s*{/g, 'for ($1 = $2; $1 $3 count($4);$5) {' ],
             [ /for\s+\(([a-zA-Z0-9_]+)\s*=\s*([^\;\s]+\s*)\;[^\<\>\=]+(\<=|\>=|<|>)\s*(.*)\s*\;([^\)]+)\)\s*{/g, 'for ($1 = $2; $1 $3 $4;$5) {' ],
             [ /([^\s]+)\.length\;/g, 'is_array($1) ? count($1) : 0;' ],
-            [ /([^\s\(]+)\.length/g, 'strlen($1)' ],
             [ /\.push\s*\(([\s\S]+?)\)\;/g, '[] = $1;' ],
             [ /(\s)await(\s)/g, '$1' ],
             [ /([\S])\: /g, '$1 => ' ],
 
         // add {}-array syntax conversions up to 20 levels deep
-        ]).concat ([ ... Array (20) ].map (x => [ /\{([^\;\{]+?)\}([^\s])/g, 'array($1)$2' ])).concat ([
+        ]).concat ([ ... Array (20) ].map (x => [ /\{([^\{]+?)\}([^\s])/g, 'array($1)$2' ])).concat ([
 
             [ /\[\s*([^\]]+?)\s*\]\.join\s*\(\s*([^\)]+?)\s*\)/g, "implode($2, array($1))" ],
 
@@ -361,8 +374,8 @@ class Transpiler {
             [ /([^\s]+)\.toFixed\s*\(([^\)]+)\)/g, "sprintf('%.' . $2 . 'f', $1)" ],
             [ /parseFloat\s/g, 'floatval '],
             [ /parseInt\s/g, 'intval '],
-            [ / \+ /g, ' . ' ],
-            [ / \+\= /g, ' .= ' ],
+            [ / \+ (?!\d)/g, ' . ' ],
+            [ / \+\= (?!\d)/g, ' .= ' ],
             [ /([^\s\(]+(?:\s*\(.+\))?)\.toUpperCase\s*\(\)/g, 'strtoupper($1)' ],
             [ /([^\s\(]+(?:\s*\(.+\))?)\.toLowerCase\s*\(\)/g, 'strtolower($1)' ],
             [ /([^\s\(]+(?:\s*\(.+\))?)\.replace\s*\(([^\)]+)\)/g, 'str_replace($2, $1)' ],
@@ -370,6 +383,7 @@ class Transpiler {
             [ /([^\s\(]+).slice \(([^\)\:,]+)\)/g, 'mb_substr($1, $2)' ],
             [ /([^\s\(]+).slice \(([^\,\)]+)\,\s*([^\)]+)\)/g, 'mb_substr($1, $2, $3 - $2)' ],
             [ /([^\s\(]+).split \(('[^']*'|[^\,]+?)\)/g, 'explode($2, $1)' ],
+            [ /([^\s\(]+)\.length/g, 'strlen($1)' ],
             [ /Math\.floor\s*\(([^\)]+)\)/g, '(int) floor($1)' ],
             [ /Math\.abs\s*\(([^\)]+)\)/g, 'abs($1)' ],
             [ /Math\.round\s*\(([^\)]+)\)/g, '(int) round($1)' ],
@@ -436,11 +450,11 @@ class Transpiler {
         ].join ("\n")
     }
 
-    getPHPPreamble () {
+    getPHPPreamble (include = true) {
         return [
             "<?php",
             "namespace ccxt;",
-            "include_once (__DIR__.'/../../ccxt.php');",
+            include ? "include_once (__DIR__.'/../../ccxt.php');" : "",
             "// ----------------------------------------------------------------------------",
             "",
             "// PLEASE DO NOT EDIT THIS FILE, IT IS GENERATED AND WILL BE OVERWRITTEN:",
@@ -653,6 +667,9 @@ class Transpiler {
             python3Body = python3Body.replace (orderedDictRegex, '\.ordered([' + replaced + '])')
         }
 
+        // snake case function names
+        python3Body = python3Body.replace (/def (\w+)/g, (match, group1) => 'def ' + unCamelCase (group1))
+
         // special case for Python super
         if (className) {
             python3Body = python3Body.replace (/super\./g, 'super(' + className + ', self).')
@@ -698,6 +715,16 @@ class Transpiler {
         let catchClauseMatches
         while (catchClauseMatches = catchClauseRegex.exec (js)) {
             allVariables.push (catchClauseMatches[1])
+        }
+
+        // match all variables instantiated as function parameters
+        let functionParamRegex = /function (\w+) \(([^)]+)\)/g
+        js = js.replace (functionParamRegex, (match, group1, group2) => 'function ' + unCamelCase (group1) + ' (' + group2 + ')')
+        let functionParamVariables
+        while (functionParamVariables = functionParamRegex.exec (js)) {
+            const match = functionParamVariables[2]
+            const tokens = match.split (', ')
+            allVariables = allVariables.concat (tokens)
         }
 
         allVariables = allVariables.map (error => this.regexAll (error, this.getCommonRegexes ()))
@@ -1290,6 +1317,49 @@ class Transpiler {
 
     // ============================================================================
 
+    transpileExchangeTests () {
+        this.transpileTradeTests ();
+    }
+
+    // ============================================================================
+
+    transpileTradeTests () {
+        const jsFile = './js/test/Exchange/test.trade.js'
+        const pyFile = './python/test/test_trade.py'
+        const phpFile = './php/test/test_trade.php'
+
+
+        log.magenta ('Transpiling from', jsFile.yellow)
+        let js = fs.readFileSync (jsFile).toString ()
+
+        js = this.regexAll (js, [
+            [ /\'use strict\';?\s+/g, '' ],
+            [ /[^\n]+require[^\n]+\n/g, '' ],
+            [ /module.exports\s+=\s+[^;]+;/g, '' ],
+        ])
+
+        const pythonHeader = [
+            '',
+            'import numbers  # noqa: E402',
+            'try:',
+            '    basestring  # basestring was removed in Python 3',
+            'except NameError:',
+            '    basestring = str',
+            '',
+            '',
+        ].join('\n')
+
+        let { python3Body, python2Body, phpBody } = this.transpileJavaScriptToPythonAndPHP ({ js, removeEmptyLines: false })
+        const python = this.getPythonPreamble () + pythonHeader + python3Body;
+        const php = this.getPHPPreamble (false) + phpBody;
+
+
+        overwriteFile (pyFile, python)
+        overwriteFile (phpFile, php)
+    }
+
+    // ============================================================================
+
     transpileEverything () {
 
         // default pattern is '.js'
@@ -1325,6 +1395,8 @@ class Transpiler {
         this.transpileCryptoTests ()
 
         this.transpilePythonAsyncToSync ('./python/test/test_async.py', './python/test/test.py')
+
+        this.transpileExchangeTests ();
 
         log.bright.green ('Transpiled successfully.')
     }

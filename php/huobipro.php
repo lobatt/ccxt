@@ -25,20 +25,27 @@ class huobipro extends Exchange {
             'hostname' => 'api.huobi.pro', // api.testnet.huobi.pro
             'pro' => true,
             'has' => array(
+                'cancelOrder' => true,
                 'CORS' => false,
-                'fetchTickers' => true,
-                'fetchDepositAddress' => true,
-                'fetchOHLCV' => true,
-                'fetchOrder' => true,
-                'fetchOrders' => true,
-                'fetchOpenOrders' => true,
+                'createOrder' => true,
+                'fetchBalance' => true,
                 'fetchClosedOrders' => true,
-                'fetchTradingLimits' => true,
-                'fetchMyTrades' => true,
-                'withdraw' => true,
                 'fetchCurrencies' => true,
+                'fetchDepositAddress' => true,
                 'fetchDeposits' => true,
+                'fetchMarkets' => true,
+                'fetchMyTrades' => true,
+                'fetchOHLCV' => true,
+                'fetchOpenOrders' => true,
+                'fetchOrder' => true,
+                'fetchOrderBook' => true,
+                'fetchOrders' => true,
+                'fetchTicker' => true,
+                'fetchTickers' => true,
+                'fetchTrades' => true,
+                'fetchTradingLimits' => true,
                 'fetchWithdrawals' => true,
+                'withdraw' => true,
             ),
             'timeframes' => array(
                 '1m' => '1min',
@@ -79,6 +86,7 @@ class huobipro extends Exchange {
                 ),
                 'v2Private' => array(
                     'get' => array(
+                        'account/ledger',
                         'account/withdraw/quota',
                         'account/deposit/address',
                         'reference/transact-fee-rate',
@@ -188,6 +196,7 @@ class huobipro extends Exchange {
                     'invalid symbol' => '\\ccxt\\BadSymbol', // array("ts":1568813334794,"status":"error","err-code":"invalid-parameter","err-msg":"invalid symbol")
                     'invalid-parameter' => '\\ccxt\\BadRequest', // array("ts":1576210479343,"status":"error","err-code":"invalid-parameter","err-msg":"symbol trade not open now")
                     'base-symbol-trade-disabled' => '\\ccxt\\BadSymbol', // array("status":"error","err-code":"base-symbol-trade-disabled","err-msg":"Trading is disabled for this symbol","data":null)
+                    'system-maintenance' => '\\ccxt\\OnMaintenance', // array("status" => "error", "err-code" => "system-maintenance", "err-msg" => "System is in maintenance!", "data" => null)
                 ),
             ),
             'options' => array(
@@ -338,6 +347,8 @@ class huobipro extends Exchange {
 
     public function parse_ticker($ticker, $market = null) {
         //
+        // fetchTicker
+        //
         //     {
         //         "amount" => 26228.672978342216,
         //         "$open" => 9078.95,
@@ -352,25 +363,47 @@ class huobipro extends Exchange {
         //         "$bid" => array( 9146.86, 0.080758 ),
         //     }
         //
+        // fetchTickers
+        //     {
+        //         $symbol => "bhdht",
+        //         $open =>  2.3938,
+        //         high =>  2.4151,
+        //         low =>  2.3323,
+        //         $close =>  2.3909,
+        //         amount =>  628.992,
+        //         vol =>  1493.71841095,
+        //         count =>  2088,
+        //         $bid =>  2.3643,
+        //         bidSize =>  0.7136,
+        //         $ask =>  2.4061,
+        //         askSize =>  0.4156
+        //     }
+        //
         $symbol = null;
         if ($market !== null) {
             $symbol = $market['symbol'];
         }
         $timestamp = $this->safe_integer($ticker, 'ts');
         $bid = null;
-        $ask = null;
         $bidVolume = null;
+        $ask = null;
         $askVolume = null;
         if (is_array($ticker) && array_key_exists('bid', $ticker)) {
             if (gettype($ticker['bid']) === 'array' && count(array_filter(array_keys($ticker['bid']), 'is_string')) == 0) {
                 $bid = $this->safe_float($ticker['bid'], 0);
                 $bidVolume = $this->safe_float($ticker['bid'], 1);
+            } else {
+                $bid = $this->safe_float($ticker, 'bid');
+                $bidVolume = $this->safe_value($ticker, 'bidSize');
             }
         }
         if (is_array($ticker) && array_key_exists('ask', $ticker)) {
             if (gettype($ticker['ask']) === 'array' && count(array_filter(array_keys($ticker['ask']), 'is_string')) == 0) {
                 $ask = $this->safe_float($ticker['ask'], 0);
                 $askVolume = $this->safe_float($ticker['ask'], 1);
+            } else {
+                $ask = $this->safe_float($ticker, 'ask');
+                $askVolume = $this->safe_value($ticker, 'askSize');
             }
         }
         $open = $this->safe_float($ticker, 'open');
@@ -659,7 +692,19 @@ class huobipro extends Exchange {
         return $this->filter_by_symbol_since_limit($result, $symbol, $since, $limit);
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
+    public function parse_ohlcv($ohlcv, $market = null) {
+        //
+        //     {
+        //         "amount":1.2082,
+        //         "open":0.025096,
+        //         "close":0.025095,
+        //         "high":0.025096,
+        //         "id":1591515300,
+        //         "count":6,
+        //         "low":0.025095,
+        //         "vol":0.0303205097
+        //     }
+        //
         return array(
             $this->safe_timestamp($ohlcv, 'id'),
             $this->safe_float($ohlcv, 'open'),
@@ -681,7 +726,20 @@ class huobipro extends Exchange {
             $request['size'] = $limit;
         }
         $response = $this->marketGetHistoryKline (array_merge($request, $params));
-        return $this->parse_ohlcvs($response['data'], $market, $timeframe, $since, $limit);
+        //
+        //     {
+        //         "status":"ok",
+        //         "ch":"$market->ethbtc.kline.1min",
+        //         "ts":1591515374371,
+        //         "$data":array(
+        //             array("amount":0.0,"open":0.025095,"close":0.025095,"high":0.025095,"id":1591515360,"count":0,"low":0.025095,"vol":0.0),
+        //             array("amount":1.2082,"open":0.025096,"close":0.025095,"high":0.025096,"id":1591515300,"count":6,"low":0.025095,"vol":0.0303205097),
+        //             array("amount":0.0648,"open":0.025096,"close":0.025096,"high":0.025096,"id":1591515240,"count":2,"low":0.025096,"vol":0.0016262208),
+        //         )
+        //     }
+        //
+        $data = $this->safe_value($response, 'data', array());
+        return $this->parse_ohlcvs($data, $market, $timeframe, $since, $limit);
     }
 
     public function fetch_accounts($params = array ()) {

@@ -37,6 +37,7 @@ class bitmart(Exchange):
                 'fetchOHLCV': True,
                 'fetchBalance': True,
                 'createOrder': True,
+                'createMarketOrder': False,
                 'cancelOrder': True,
                 'cancelAllOrders': True,
                 'fetchOrders': False,
@@ -45,6 +46,7 @@ class bitmart(Exchange):
                 'fetchClosedOrders': True,
                 'fetchCanceledOrders': True,
                 'fetchOrder': True,
+                'signIn': True,
             },
             'urls': {
                 'logo': 'https://user-images.githubusercontent.com/1294454/61835713-a2662f80-ae85-11e9-9d00-6442919701fd.jpg',
@@ -52,6 +54,7 @@ class bitmart(Exchange):
                 'www': 'https://www.bitmart.com/',
                 'doc': 'https://github.com/bitmartexchange/bitmart-official-api-docs',
                 'referral': 'http://www.bitmart.com/?r=rQCFLh',
+                'fees': 'https://www.bitmart.com/fee/en',
             },
             'requiredCredentials': {
                 'apiKey': True,
@@ -145,6 +148,7 @@ class bitmart(Exchange):
                     'Not found': OrderNotFound,  # {"message":"Not found"}
                     'Visit too often, please try again later': DDoSProtection,  # {"code":-30,"msg":"Visit too often, please try again later","subMsg":"","data":{}}
                     'Unknown symbol': BadSymbol,  # {"message":"Unknown symbol"}
+                    'Unauthorized': AuthenticationError,
                 },
                 'broad': {
                     'Invalid limit. limit must be in the range': InvalidOrder,
@@ -185,12 +189,12 @@ class bitmart(Exchange):
         if not accessToken:
             raise AuthenticationError(self.id + ' signIn() failed to authenticate. Access token missing from response.')
         expiresIn = self.safe_integer(response, 'expires_in')
-        self.options['expires'] = self.sum(self.nonce(), expiresIn * 1000)
+        self.options['expires'] = self.sum(self.milliseconds(), expiresIn * 1000)
         self.options['accessToken'] = accessToken
         return response
 
     def fetch_markets(self, params={}):
-        markets = self.publicGetSymbolsDetails(params)
+        response = self.publicGetSymbolsDetails(params)
         #
         #     [
         #         {
@@ -207,8 +211,8 @@ class bitmart(Exchange):
         #     ]
         #
         result = []
-        for i in range(0, len(markets)):
-            market = markets[i]
+        for i in range(0, len(response)):
+            market = response[i]
             id = self.safe_string(market, 'id')
             baseId = self.safe_string(market, 'base_currency')
             quoteId = self.safe_string(market, 'quote_currency')
@@ -260,26 +264,76 @@ class bitmart(Exchange):
         return result
 
     def parse_ticker(self, ticker, market=None):
-        timestamp = self.milliseconds()
-        marketId = self.safe_string(ticker, 'symbol_id')
+        #
+        # fetchTicker
+        #
+        #     {
+        #         "volume":"6139.8058",
+        #         "ask_1":"0.021856",
+        #         "base_volume":"131.5157",
+        #         "lowest_price":"0.021090",
+        #         "bid_1":"0.021629",
+        #         "highest_price":"0.021929",
+        #         "ask_1_amount":"0.1245",
+        #         "current_price":"0.021635",
+        #         "fluctuation":"+0.0103",
+        #         "symbol_id":"ETH_BTC",
+        #         "url":"https://www.bitmart.com/trade?symbol=ETH_BTC",
+        #         "bid_1_amount":"1.8546"
+        #     }
+        #
+        # fetchTickers
+        #
+        #     {
+        #         "priceChange":"0%",
+        #         "symbolId":1066,
+        #         "website":"https://www.bitmart.com/trade?symbol=1SG_BTC",
+        #         "depthEndPrecision":6,
+        #         "ask_1":"0.000095",
+        #         "anchorId":2,
+        #         "anchorName":"BTC",
+        #         "pair":"1SG_BTC",
+        #         "volume":"0.0",
+        #         "coinId":2029,
+        #         "depthStartPrecision":4,
+        #         "high_24h":"0.000035",
+        #         "low_24h":"0.000035",
+        #         "new_24h":"0.000035",
+        #         "closeTime":1589389249342,
+        #         "bid_1":"0.000035",
+        #         "coinName":"1SG",
+        #         "baseVolume":"0.0",
+        #         "openTime":1589302849342
+        #     }
+        #
+        timestamp = self.safe_integer(ticker, 'closeTime', self.milliseconds())
+        marketId = self.safe_string_2(ticker, 'pair', 'symbol_id')
         symbol = None
         if marketId is not None:
             if marketId in self.markets_by_id:
                 market = self.markets_by_id[marketId]
-                symbol = market['symbol']
             elif marketId is not None:
                 baseId, quoteId = marketId.split('_')
                 base = self.safe_currency_code(baseId)
                 quote = self.safe_currency_code(quoteId)
                 symbol = base + '/' + quote
-        last = self.safe_float(ticker, 'current_price')
+        if (symbol is None) and (market is not None):
+            symbol = market['symbol']
+        last = self.safe_float_2(ticker, 'current_price', 'new_24h')
         percentage = self.safe_float(ticker, 'fluctuation')
+        if percentage is None:
+            percentage = self.safe_string(ticker, 'priceChange')
+            if percentage is not None:
+                percentage = percentage.replace('%', '')
+                percentage = float(percentage)
+        else:
+            percentage *= 100
         return {
             'symbol': symbol,
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
-            'high': self.safe_float(ticker, 'highest_price'),
-            'low': self.safe_float(ticker, 'lowest_price'),
+            'high': self.safe_float_2(ticker, 'highest_price', 'high_24h'),
+            'low': self.safe_float_2(ticker, 'lowest_price', 'low_24h'),
             'bid': self.safe_float(ticker, 'bid_1'),
             'bidVolume': self.safe_float(ticker, 'bid_1_amount'),
             'ask': self.safe_float(ticker, 'ask_1'),
@@ -290,17 +344,18 @@ class bitmart(Exchange):
             'last': last,
             'previousClose': None,
             'change': None,
-            'percentage': percentage * 100,
+            'percentage': percentage,
             'average': None,
             'baseVolume': self.safe_float(ticker, 'volume'),
-            'quoteVolume': self.safe_float(ticker, 'base_volume'),
+            'quoteVolume': self.safe_float_2(ticker, 'base_volume', 'baseVolume'),
             'info': ticker,
         }
 
     def fetch_ticker(self, symbol, params={}):
         self.load_markets()
+        market = self.market(symbol)
         request = {
-            'symbol': self.market_id(symbol),
+            'symbol': market['id'],
         }
         response = self.publicGetTicker(self.extend(request, params))
         #
@@ -319,11 +374,37 @@ class bitmart(Exchange):
         #         "bid_1_amount":"134.78"
         #     }
         #
-        return self.parse_ticker(response)
+        return self.parse_ticker(response, market)
 
     def fetch_tickers(self, symbols=None, params={}):
         self.load_markets()
         tickers = self.publicGetTicker(params)
+        #
+        #
+        #     [
+        #         {
+        #             "priceChange":"0%",
+        #             "symbolId":1066,
+        #             "website":"https://www.bitmart.com/trade?symbol=1SG_BTC",
+        #             "depthEndPrecision":6,
+        #             "ask_1":"0.000095",
+        #             "anchorId":2,
+        #             "anchorName":"BTC",
+        #             "pair":"1SG_BTC",
+        #             "volume":"0.0",
+        #             "coinId":2029,
+        #             "depthStartPrecision":4,
+        #             "high_24h":"0.000035",
+        #             "low_24h":"0.000035",
+        #             "new_24h":"0.000035",
+        #             "closeTime":1589389249342,
+        #             "bid_1":"0.000035",
+        #             "coinName":"1SG",
+        #             "baseVolume":"0.0",
+        #             "openTime":1589302849342
+        #         },
+        #     ]
+        #
         result = {}
         for i in range(0, len(tickers)):
             ticker = self.parse_ticker(tickers[i])
@@ -332,7 +413,7 @@ class bitmart(Exchange):
         return result
 
     def fetch_currencies(self, params={}):
-        currencies = self.publicGetCurrencies(params)
+        response = self.publicGetCurrencies(params)
         #
         #     [
         #         {
@@ -344,16 +425,16 @@ class bitmart(Exchange):
         #     ]
         #
         result = {}
-        for i in range(0, len(currencies)):
-            currency = currencies[i]
-            currencyId = self.safe_string(currency, 'id')
-            code = self.safe_currency_code(currencyId)
+        for i in range(0, len(response)):
+            currency = response[i]
+            id = self.safe_string(currency, 'id')
+            code = self.safe_currency_code(id)
             name = self.safe_string(currency, 'name')
             withdrawEnabled = self.safe_value(currency, 'withdraw_enabled')
             depositEnabled = self.safe_value(currency, 'deposit_enabled')
             active = withdrawEnabled and depositEnabled
             result[code] = {
-                'id': currencyId,
+                'id': id,
                 'code': code,
                 'name': name,
                 'info': currency,  # the original payload
@@ -520,7 +601,17 @@ class bitmart(Exchange):
         }
         return self.fetch_my_trades(symbol, since, limit, self.extend(request, params))
 
-    def parse_ohlcv(self, ohlcv, market=None, timeframe='1m', since=None, limit=None):
+    def parse_ohlcv(self, ohlcv, market=None):
+        #
+        #     {
+        #         "timestamp":1525761000000,
+        #         "open_price":"0.010130",
+        #         "highest_price":"0.010130",
+        #         "lowest_price":"0.010130",
+        #         "current_price":"0.010130",
+        #         "volume":"0.000000"
+        #     }
+        #
         return [
             self.safe_integer(ohlcv, 'timestamp'),
             self.safe_float(ohlcv, 'open_price'),
@@ -565,7 +656,7 @@ class bitmart(Exchange):
 
     def fetch_balance(self, params={}):
         self.load_markets()
-        balances = self.privateGetWallet(params)
+        response = self.privateGetWallet(params)
         #
         #     [
         #         {
@@ -576,9 +667,9 @@ class bitmart(Exchange):
         #         }
         #     ]
         #
-        result = {'info': balances}
-        for i in range(0, len(balances)):
-            balance = balances[i]
+        result = {'info': response}
+        for i in range(0, len(response)):
+            balance = response[i]
             currencyId = self.safe_string(balance, 'id')
             code = self.safe_currency_code(currencyId)
             account = self.account()
@@ -615,7 +706,7 @@ class bitmart(Exchange):
         #     }
         #
         id = self.safe_string(order, 'entrust_id')
-        timestamp = self.milliseconds()
+        timestamp = self.safe_integer(order, 'timestamp', self.milliseconds())
         status = self.parse_order_status(self.safe_string(order, 'status'))
         symbol = None
         marketId = self.safe_string(order, 'symbol')
@@ -637,10 +728,10 @@ class bitmart(Exchange):
         if amount is not None:
             if remaining is not None:
                 if filled is None:
-                    filled = amount - remaining
+                    filled = max(0, amount - remaining)
             if filled is not None:
                 if remaining is None:
-                    remaining = amount - filled
+                    remaining = max(0, amount - filled)
                 if cost is None:
                     if price is not None:
                         cost = price * filled
@@ -658,7 +749,7 @@ class bitmart(Exchange):
             'side': side,
             'price': price,
             'amount': amount,
-            'cost': None,
+            'cost': cost,
             'average': None,
             'filled': filled,
             'remaining': remaining,

@@ -4,7 +4,7 @@
 
 let [processPath, , exchangeId, methodName, ... params] = process.argv.filter (x => !x.startsWith ('--'))
     , verbose = process.argv.includes ('--verbose')
-    , debug = process.argv.includes ('--verbose')
+    , debug = process.argv.includes ('--debug')
     , cloudscrape = process.argv.includes ('--cloudscrape')
     , cfscrape = process.argv.includes ('--cfscrape')
     , poll = process.argv.includes ('--poll')
@@ -15,6 +15,10 @@ let [processPath, , exchangeId, methodName, ... params] = process.argv.filter (x
     , table = process.argv.includes ('--table')
     , iso8601 = process.argv.includes ('--iso8601')
     , cors = process.argv.includes ('--cors')
+    , testnet =
+        process.argv.includes ('--test') ||
+        process.argv.includes ('--testnet') ||
+        process.argv.includes ('--sandbox')
 
 //-----------------------------------------------------------------------------
 
@@ -40,6 +44,11 @@ const ccxt         = require ('../../ccxt.js')
     , { execSync } = require ('child_process')
     , log          = require ('ololog').configure ({ locate: false }).unlimited
     , { ExchangeError, NetworkError } = ccxt
+
+//-----------------------------------------------------------------------------
+
+console.log ('Node.js:', process.version)
+console.log ('CCXT v' + ccxt.version)
 
 //-----------------------------------------------------------------------------
 
@@ -105,16 +114,20 @@ try {
 
     const { Agent } = require ('https')
 
-    const agent = new Agent ({
+    const httpsAgent = new Agent ({
         ecdhCurve: 'auto',
     })
 
     exchange = new (ccxt)[exchangeId] ({
         timeout,
         enableRateLimit,
-        agent,
+        httpsAgent,
         ... settings,
     })
+
+    if (testnet) {
+        exchange.setSandboxMode (true)
+    }
 
 } catch (e) {
 

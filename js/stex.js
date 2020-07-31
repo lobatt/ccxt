@@ -23,6 +23,7 @@ module.exports = class stex extends Exchange {
                 'fetchMarkets': true,
                 'fetchTicker': true,
                 'fetchTickers': true,
+                'fetchTime': true,
                 'fetchOrderBook': true,
                 'fetchOHLCV': true,
                 'fetchBalance': true,
@@ -411,6 +412,26 @@ module.exports = class stex extends Exchange {
         return this.parseTicker (ticker, market);
     }
 
+    async fetchTime (params = {}) {
+        const response = await this.publicGetPing (params);
+        //
+        //     {
+        //         "success": true,
+        //         "data": {
+        //             "server_datetime": {
+        //                 "date": "2019-01-22 15:13:34.233796",
+        //                 "timezone_type": 3,
+        //                 "timezone": "UTC"
+        //             },
+        //             "server_timestamp": 1548170014
+        //         }
+        //     }
+        //
+        const data = this.safeValue (response, 'data', {});
+        const serverDatetime = this.safeValue (data, 'server_datetime', {});
+        return this.parse8601 (this.safeString (serverDatetime, 'date'));
+    }
+
     async fetchOrderBook (symbol, limit = undefined, params = {}) {
         await this.loadMarkets ();
         const market = this.market (symbol);
@@ -596,7 +617,7 @@ module.exports = class stex extends Exchange {
         return this.parseTickers (tickers, symbols);
     }
 
-    parseOHLCV (ohlcv, market = undefined, timeframe = '1d', since = undefined, limit = undefined) {
+    parseOHLCV (ohlcv, market = undefined) {
         //
         //     {
         //         "time": 1566086400000,
@@ -658,8 +679,8 @@ module.exports = class stex extends Exchange {
         //         ]
         //     }
         //
-        const ohlcvs = this.safeValue (response, 'data', []);
-        return this.parseOHLCVs (ohlcvs, market, timeframe, since, limit);
+        const data = this.safeValue (response, 'data', []);
+        return this.parseOHLCVs (data, market, timeframe, since, limit);
     }
 
     parseTrade (trade, market = undefined) {

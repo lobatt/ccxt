@@ -19,20 +19,27 @@ module.exports = class bytetrade extends Exchange {
             'certified': true,
             // new metainfo interface
             'has': {
+                'cancelOrder': true,
+                'CORS': false,
+                'createOrder': true,
+                'fetchBalance': true,
+                'fetchBidsAsks': true,
+                'fetchClosedOrders': true,
                 'fetchCurrencies': true,
                 'fetchDepositAddress': true,
-                'CORS': false,
-                'fetchBidsAsks': true,
-                'fetchTickers': true,
-                'fetchOHLCV': true,
-                'fetchMyTrades': true,
-                'fetchOrder': true,
-                'fetchOrders': true,
-                'fetchOpenOrders': true,
-                'fetchClosedOrders': true,
-                'withdraw': true,
                 'fetchDeposits': true,
+                'fetchMarkets': true,
+                'fetchMyTrades': true,
+                'fetchOHLCV': true,
+                'fetchOpenOrders': true,
+                'fetchOrder': true,
+                'fetchOrderBook': true,
+                'fetchOrders': true,
+                'fetchTicker': true,
+                'fetchTickers': true,
+                'fetchTrades': true,
                 'fetchWithdrawals': true,
+                'withdraw': true,
             },
             'timeframes': {
                 '1m': '1m',
@@ -47,9 +54,15 @@ module.exports = class bytetrade extends Exchange {
                 '1M': '1M',
             },
             'urls': {
-                'test': 'https://api-v2-test.byte-trade.com',
+                'test': {
+                    'market': 'https://api-v2-test.byte-trade.com',
+                    'public': 'https://api-v2-test.byte-trade.com',
+                },
                 'logo': 'https://user-images.githubusercontent.com/1294454/67288762-2f04a600-f4e6-11e9-9fd6-c60641919491.jpg',
-                'api': 'https://api-v2.byte-trade.com',
+                'api': {
+                    'market': 'https://api-v2.bytetrade.com',
+                    'public': 'https://api-v2.bytetrade.com',
+                },
                 'www': 'https://www.byte-trade.com',
                 'doc': 'https://github.com/Bytetrade/bytetrade-official-api-docs/wiki',
             },
@@ -426,14 +439,24 @@ module.exports = class bytetrade extends Exchange {
         return this.parseTickers (rawTickers, symbols);
     }
 
-    parseOHLCV (ohlcv, market = undefined, timeframe = '1m', since = undefined, limit = undefined) {
+    parseOHLCV (ohlcv, market = undefined) {
+        //
+        //     [
+        //         1591505760000,
+        //         "242.7",
+        //         "242.76",
+        //         "242.69",
+        //         "242.76",
+        //         "0.1892"
+        //     ]
+        //
         return [
-            ohlcv[0],
-            parseFloat (ohlcv[1]),
-            parseFloat (ohlcv[2]),
-            parseFloat (ohlcv[3]),
-            parseFloat (ohlcv[4]),
-            parseFloat (ohlcv[5]),
+            this.safeInteger (ohlcv, 0),
+            this.safeFloat (ohlcv, 1),
+            this.safeFloat (ohlcv, 2),
+            this.safeFloat (ohlcv, 3),
+            this.safeFloat (ohlcv, 4),
+            this.safeFloat (ohlcv, 5),
         ];
     }
 
@@ -451,6 +474,13 @@ module.exports = class bytetrade extends Exchange {
             request['limit'] = limit;
         }
         const response = await this.marketGetKlines (this.extend (request, params));
+        //
+        //     [
+        //         [1591505760000,"242.7","242.76","242.69","242.76","0.1892"],
+        //         [1591505820000,"242.77","242.83","242.7","242.72","0.6378"],
+        //         [1591505880000,"242.72","242.73","242.61","242.72","0.4141"],
+        //     ]
+        //
         return this.parseOHLCVs (response, market, timeframe, since, limit);
     }
 
@@ -463,7 +493,7 @@ module.exports = class bytetrade extends Exchange {
         const type = this.safeString (trade, 'type');
         const takerOrMaker = this.safeString (trade, 'takerOrMaker');
         const side = this.safeString (trade, 'side');
-        const datetime = this.safeString (trade, 'datetime');
+        const datetime = this.iso8601 (timestamp); // this.safeString (trade, 'datetime');
         const order = this.safeString (trade, 'order');
         const fee = this.safeValue (trade, 'fee');
         let symbol = undefined;
@@ -920,7 +950,7 @@ module.exports = class bytetrade extends Exchange {
         }
         await this.loadMarkets ();
         const currency = this.currency (code);
-        const amountTruncate = this.decimalToPrecision (amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
+        const amountTruncate = this.decimalToPrecision (amount, TRUNCATE, currency['info']['basePrecision'] - currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
         const amountChain = this.toWei (amountTruncate, currency['precision']['amount']);
         const assetType = parseInt (currency['id']);
         const now = this.milliseconds ();
@@ -1201,7 +1231,7 @@ module.exports = class bytetrade extends Exchange {
         const feeAmount = '300000000000000';
         const currency = this.currency (code);
         const coinId = currency['id'];
-        const amountTruncate = this.decimalToPrecision (amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
+        const amountTruncate = this.decimalToPrecision (amount, TRUNCATE, currency['info']['basePrecision'] - currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
         const amountChain = this.toWei (amountTruncate, currency['info']['externalPrecision']);
         const eightBytes = this.integerPow ('2', '64');
         let assetFee = 0;
@@ -1222,7 +1252,7 @@ module.exports = class bytetrade extends Exchange {
                 this.numberToLE (address.length, 1),
                 this.stringToBinary (this.encode (address)),
                 this.numberToLE (parseInt (coinId), 4),
-                this.numberToLE (Math.floor (parseInt (parseFloat (this.integerDivide (amountChain, eightBytes)))), 8),
+                this.numberToLE (this.integerDivide (amountChain, eightBytes), 8),
                 this.numberToLE (this.integerModulo (amountChain, eightBytes), 8),
                 this.numberToLE (1, 1),
                 this.numberToLE (this.integerDivide (assetFee, eightBytes), 8),
@@ -1255,7 +1285,7 @@ module.exports = class bytetrade extends Exchange {
                 this.numberToLE (middleAddress.length, 1),
                 this.stringToBinary (this.encode (middleAddress)),
                 this.numberToLE (parseInt (coinId), 4),
-                this.numberToLE (Math.floor (parseInt (parseFloat (this.integerDivide (amountChain, eightBytes)))), 8),
+                this.numberToLE (this.integerDivide (amountChain, eightBytes), 8),
                 this.numberToLE (this.integerModulo (amountChain, eightBytes), 8),
                 this.numberToLE (0, 1),
                 this.numberToLE (1, 1),
@@ -1358,7 +1388,7 @@ module.exports = class bytetrade extends Exchange {
     }
 
     sign (path, api = 'public', method = 'GET', params = {}, headers = undefined, body = undefined) {
-        let url = this.urls['api'];
+        let url = this.urls['api'][api];
         url += '/' + path;
         if (Object.keys (params).length) {
             url += '?' + this.urlencode (params);

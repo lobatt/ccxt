@@ -29,20 +29,27 @@ class bytetrade(Exchange):
             'certified': True,
             # new metainfo interface
             'has': {
+                'cancelOrder': True,
+                'CORS': False,
+                'createOrder': True,
+                'fetchBalance': True,
+                'fetchBidsAsks': True,
+                'fetchClosedOrders': True,
                 'fetchCurrencies': True,
                 'fetchDepositAddress': True,
-                'CORS': False,
-                'fetchBidsAsks': True,
-                'fetchTickers': True,
-                'fetchOHLCV': True,
-                'fetchMyTrades': True,
-                'fetchOrder': True,
-                'fetchOrders': True,
-                'fetchOpenOrders': True,
-                'fetchClosedOrders': True,
-                'withdraw': True,
                 'fetchDeposits': True,
+                'fetchMarkets': True,
+                'fetchMyTrades': True,
+                'fetchOHLCV': True,
+                'fetchOpenOrders': True,
+                'fetchOrder': True,
+                'fetchOrderBook': True,
+                'fetchOrders': True,
+                'fetchTicker': True,
+                'fetchTickers': True,
+                'fetchTrades': True,
                 'fetchWithdrawals': True,
+                'withdraw': True,
             },
             'timeframes': {
                 '1m': '1m',
@@ -57,9 +64,15 @@ class bytetrade(Exchange):
                 '1M': '1M',
             },
             'urls': {
-                'test': 'https://api-v2-test.byte-trade.com',
+                'test': {
+                    'market': 'https://api-v2-test.byte-trade.com',
+                    'public': 'https://api-v2-test.byte-trade.com',
+                },
                 'logo': 'https://user-images.githubusercontent.com/1294454/67288762-2f04a600-f4e6-11e9-9fd6-c60641919491.jpg',
-                'api': 'https://api-v2.byte-trade.com',
+                'api': {
+                    'market': 'https://api-v2.bytetrade.com',
+                    'public': 'https://api-v2.bytetrade.com',
+                },
                 'www': 'https://www.byte-trade.com',
                 'doc': 'https://github.com/Bytetrade/bytetrade-official-api-docs/wiki',
             },
@@ -410,14 +423,24 @@ class bytetrade(Exchange):
         rawTickers = await self.marketGetTickers(params)
         return self.parse_tickers(rawTickers, symbols)
 
-    def parse_ohlcv(self, ohlcv, market=None, timeframe='1m', since=None, limit=None):
+    def parse_ohlcv(self, ohlcv, market=None):
+        #
+        #     [
+        #         1591505760000,
+        #         "242.7",
+        #         "242.76",
+        #         "242.69",
+        #         "242.76",
+        #         "0.1892"
+        #     ]
+        #
         return [
-            ohlcv[0],
-            float(ohlcv[1]),
-            float(ohlcv[2]),
-            float(ohlcv[3]),
-            float(ohlcv[4]),
-            float(ohlcv[5]),
+            self.safe_integer(ohlcv, 0),
+            self.safe_float(ohlcv, 1),
+            self.safe_float(ohlcv, 2),
+            self.safe_float(ohlcv, 3),
+            self.safe_float(ohlcv, 4),
+            self.safe_float(ohlcv, 5),
         ]
 
     async def fetch_ohlcv(self, symbol, timeframe='1m', since=None, limit=None, params={}):
@@ -432,6 +455,13 @@ class bytetrade(Exchange):
         if limit is not None:
             request['limit'] = limit
         response = await self.marketGetKlines(self.extend(request, params))
+        #
+        #     [
+        #         [1591505760000,"242.7","242.76","242.69","242.76","0.1892"],
+        #         [1591505820000,"242.77","242.83","242.7","242.72","0.6378"],
+        #         [1591505880000,"242.72","242.73","242.61","242.72","0.4141"],
+        #     ]
+        #
         return self.parse_ohlcvs(response, market, timeframe, since, limit)
 
     def parse_trade(self, trade, market=None):
@@ -443,7 +473,7 @@ class bytetrade(Exchange):
         type = self.safe_string(trade, 'type')
         takerOrMaker = self.safe_string(trade, 'takerOrMaker')
         side = self.safe_string(trade, 'side')
-        datetime = self.safe_string(trade, 'datetime')
+        datetime = self.iso8601(timestamp)  # self.safe_string(trade, 'datetime')
         order = self.safe_string(trade, 'order')
         fee = self.safe_value(trade, 'fee')
         symbol = None
@@ -867,7 +897,7 @@ class bytetrade(Exchange):
             raise ArgumentsRequired('transfer requires self.apiKey')
         await self.load_markets()
         currency = self.currency(code)
-        amountTruncate = self.decimal_to_precision(amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING)
+        amountTruncate = self.decimal_to_precision(amount, TRUNCATE, currency['info']['basePrecision'] - currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING)
         amountChain = self.to_wei(amountTruncate, currency['precision']['amount'])
         assetType = int(currency['id'])
         now = self.milliseconds()
@@ -1123,7 +1153,7 @@ class bytetrade(Exchange):
         feeAmount = '300000000000000'
         currency = self.currency(code)
         coinId = currency['id']
-        amountTruncate = self.decimal_to_precision(amount, TRUNCATE, currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING)
+        amountTruncate = self.decimal_to_precision(amount, TRUNCATE, currency['info']['basePrecision'] - currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING)
         amountChain = self.to_wei(amountTruncate, currency['info']['externalPrecision'])
         eightBytes = self.integer_pow('2', '64')
         assetFee = 0
@@ -1144,7 +1174,7 @@ class bytetrade(Exchange):
                 self.number_to_le(len(address), 1),
                 self.encode(address),
                 self.number_to_le(int(coinId), 4),
-                self.number_to_le(int(math.floor(int(float(self.integer_divide(amountChain, eightBytes))))), 8),
+                self.number_to_le(self.integer_divide(amountChain, eightBytes), 8),
                 self.number_to_le(self.integer_modulo(amountChain, eightBytes), 8),
                 self.number_to_le(1, 1),
                 self.number_to_le(self.integer_divide(assetFee, eightBytes), 8),
@@ -1177,7 +1207,7 @@ class bytetrade(Exchange):
                 self.number_to_le(len(middleAddress), 1),
                 self.encode(middleAddress),
                 self.number_to_le(int(coinId), 4),
-                self.number_to_le(int(math.floor(int(float(self.integer_divide(amountChain, eightBytes))))), 8),
+                self.number_to_le(self.integer_divide(amountChain, eightBytes), 8),
                 self.number_to_le(self.integer_modulo(amountChain, eightBytes), 8),
                 self.number_to_le(0, 1),
                 self.number_to_le(1, 1),
@@ -1276,7 +1306,7 @@ class bytetrade(Exchange):
         }
 
     def sign(self, path, api='public', method='GET', params={}, headers=None, body=None):
-        url = self.urls['api']
+        url = self.urls['api'][api]
         url += '/' + path
         if params:
             url += '?' + self.urlencode(params)

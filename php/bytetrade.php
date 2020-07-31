@@ -23,20 +23,27 @@ class bytetrade extends Exchange {
             'certified' => true,
             // new metainfo interface
             'has' => array(
+                'cancelOrder' => true,
+                'CORS' => false,
+                'createOrder' => true,
+                'fetchBalance' => true,
+                'fetchBidsAsks' => true,
+                'fetchClosedOrders' => true,
                 'fetchCurrencies' => true,
                 'fetchDepositAddress' => true,
-                'CORS' => false,
-                'fetchBidsAsks' => true,
-                'fetchTickers' => true,
-                'fetchOHLCV' => true,
-                'fetchMyTrades' => true,
-                'fetchOrder' => true,
-                'fetchOrders' => true,
-                'fetchOpenOrders' => true,
-                'fetchClosedOrders' => true,
-                'withdraw' => true,
                 'fetchDeposits' => true,
+                'fetchMarkets' => true,
+                'fetchMyTrades' => true,
+                'fetchOHLCV' => true,
+                'fetchOpenOrders' => true,
+                'fetchOrder' => true,
+                'fetchOrderBook' => true,
+                'fetchOrders' => true,
+                'fetchTicker' => true,
+                'fetchTickers' => true,
+                'fetchTrades' => true,
                 'fetchWithdrawals' => true,
+                'withdraw' => true,
             ),
             'timeframes' => array(
                 '1m' => '1m',
@@ -51,9 +58,15 @@ class bytetrade extends Exchange {
                 '1M' => '1M',
             ),
             'urls' => array(
-                'test' => 'https://api-v2-test.byte-trade.com',
+                'test' => array(
+                    'market' => 'https://api-v2-test.byte-trade.com',
+                    'public' => 'https://api-v2-test.byte-trade.com',
+                ),
                 'logo' => 'https://user-images.githubusercontent.com/1294454/67288762-2f04a600-f4e6-11e9-9fd6-c60641919491.jpg',
-                'api' => 'https://api-v2.byte-trade.com',
+                'api' => array(
+                    'market' => 'https://api-v2.bytetrade.com',
+                    'public' => 'https://api-v2.bytetrade.com',
+                ),
                 'www' => 'https://www.byte-trade.com',
                 'doc' => 'https://github.com/Bytetrade/bytetrade-official-api-docs/wiki',
             ),
@@ -430,15 +443,25 @@ class bytetrade extends Exchange {
         return $this->parse_tickers($rawTickers, $symbols);
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
-        return [
-            $ohlcv[0],
-            floatval ($ohlcv[1]),
-            floatval ($ohlcv[2]),
-            floatval ($ohlcv[3]),
-            floatval ($ohlcv[4]),
-            floatval ($ohlcv[5]),
-        ];
+    public function parse_ohlcv($ohlcv, $market = null) {
+        //
+        //     array(
+        //         1591505760000,
+        //         "242.7",
+        //         "242.76",
+        //         "242.69",
+        //         "242.76",
+        //         "0.1892"
+        //     )
+        //
+        return array(
+            $this->safe_integer($ohlcv, 0),
+            $this->safe_float($ohlcv, 1),
+            $this->safe_float($ohlcv, 2),
+            $this->safe_float($ohlcv, 3),
+            $this->safe_float($ohlcv, 4),
+            $this->safe_float($ohlcv, 5),
+        );
     }
 
     public function fetch_ohlcv($symbol, $timeframe = '1m', $since = null, $limit = null, $params = array ()) {
@@ -455,6 +478,13 @@ class bytetrade extends Exchange {
             $request['limit'] = $limit;
         }
         $response = $this->marketGetKlines (array_merge($request, $params));
+        //
+        //     [
+        //         [1591505760000,"242.7","242.76","242.69","242.76","0.1892"],
+        //         [1591505820000,"242.77","242.83","242.7","242.72","0.6378"],
+        //         [1591505880000,"242.72","242.73","242.61","242.72","0.4141"],
+        //     ]
+        //
         return $this->parse_ohlcvs($response, $market, $timeframe, $since, $limit);
     }
 
@@ -467,7 +497,7 @@ class bytetrade extends Exchange {
         $type = $this->safe_string($trade, 'type');
         $takerOrMaker = $this->safe_string($trade, 'takerOrMaker');
         $side = $this->safe_string($trade, 'side');
-        $datetime = $this->safe_string($trade, 'datetime');
+        $datetime = $this->iso8601($timestamp); // $this->safe_string($trade, 'datetime');
         $order = $this->safe_string($trade, 'order');
         $fee = $this->safe_value($trade, 'fee');
         $symbol = null;
@@ -924,7 +954,7 @@ class bytetrade extends Exchange {
         }
         $this->load_markets();
         $currency = $this->currency($code);
-        $amountTruncate = $this->decimal_to_precision($amount, TRUNCATE, $currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
+        $amountTruncate = $this->decimal_to_precision($amount, TRUNCATE, $currency['info']['basePrecision'] - $currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
         $amountChain = $this->to_wei($amountTruncate, $currency['precision']['amount']);
         $assetType = intval ($currency['id']);
         $now = $this->milliseconds();
@@ -1205,7 +1235,7 @@ class bytetrade extends Exchange {
         $feeAmount = '300000000000000';
         $currency = $this->currency($code);
         $coinId = $currency['id'];
-        $amountTruncate = $this->decimal_to_precision($amount, TRUNCATE, $currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
+        $amountTruncate = $this->decimal_to_precision($amount, TRUNCATE, $currency['info']['basePrecision'] - $currency['info']['transferPrecision'], DECIMAL_PLACES, NO_PADDING);
         $amountChain = $this->to_wei($amountTruncate, $currency['info']['externalPrecision']);
         $eightBytes = $this->integer_pow('2', '64');
         $assetFee = 0;
@@ -1226,7 +1256,7 @@ class bytetrade extends Exchange {
                 $this->number_to_le(strlen($address), 1),
                 $this->encode($address),
                 $this->number_to_le(intval ($coinId), 4),
-                $this->number_to_le((int) floor(intval (floatval ($this->integer_divide($amountChain, $eightBytes)))), 8),
+                $this->number_to_le($this->integer_divide($amountChain, $eightBytes), 8),
                 $this->number_to_le($this->integer_modulo($amountChain, $eightBytes), 8),
                 $this->number_to_le(1, 1),
                 $this->number_to_le($this->integer_divide($assetFee, $eightBytes), 8),
@@ -1259,7 +1289,7 @@ class bytetrade extends Exchange {
                 $this->number_to_le(strlen($middleAddress), 1),
                 $this->encode($middleAddress),
                 $this->number_to_le(intval ($coinId), 4),
-                $this->number_to_le((int) floor(intval (floatval ($this->integer_divide($amountChain, $eightBytes)))), 8),
+                $this->number_to_le($this->integer_divide($amountChain, $eightBytes), 8),
                 $this->number_to_le($this->integer_modulo($amountChain, $eightBytes), 8),
                 $this->number_to_le(0, 1),
                 $this->number_to_le(1, 1),
@@ -1362,7 +1392,7 @@ class bytetrade extends Exchange {
     }
 
     public function sign($path, $api = 'public', $method = 'GET', $params = array (), $headers = null, $body = null) {
-        $url = $this->urls['api'];
+        $url = $this->urls['api'][$api];
         $url .= '/' . $path;
         if ($params) {
             $url .= '?' . $this->urlencode($params);

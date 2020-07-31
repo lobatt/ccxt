@@ -20,14 +20,15 @@ class kuna extends acx {
             'has' => array(
                 'CORS' => false,
                 'fetchTickers' => true,
-                'fetchOHLCV' => false,
+                'fetchOHLCV' => 'emulated',
                 'fetchOpenOrders' => true,
                 'fetchMyTrades' => true,
                 'withdraw' => false,
             ),
+            'timeframes' => null,
             'urls' => array(
                 'referral' => 'https://kuna.io?r=kunaid-gvfihe8az7o4',
-                'logo' => 'https://user-images.githubusercontent.com/1294454/31697638-912824fa-b3c1-11e7-8c36-cf9606eb94ac.jpg',
+                'logo' => 'https://user-images.githubusercontent.com/51840849/87153927-f0578b80-c2c0-11ea-84b6-74612568e9e1.jpg',
                 'api' => 'https://kuna.io',
                 'www' => 'https://kuna.io',
                 'doc' => 'https://kuna.io/documents/api',
@@ -53,7 +54,7 @@ class kuna extends acx {
                         // 'EVR' => 0.01 ETH
                     ),
                     'deposit' => array(
-                        // 'UAH' => (amount) => amount * 0.001 . 5
+                        // 'UAH' => (amount) => amount * 0.001 + 5
                     ),
                 ),
             ),
@@ -61,7 +62,7 @@ class kuna extends acx {
     }
 
     public function fetch_markets($params = array ()) {
-        $quotes = array( 'btc', 'eth', 'eurs', 'rub', 'uah', 'usd', 'usdt' );
+        $quotes = array( 'btc', 'eth', 'eurs', 'rub', 'uah', 'usd', 'usdt', 'gol' );
         $pricePrecisions = array(
             'UAH' => 0,
         );
@@ -147,7 +148,7 @@ class kuna extends acx {
                 'ask' => 'sell',
                 'bid' => 'buy',
             );
-            $side = $this->safe_string($sideMap, $side);
+            $side = $this->safe_string($sideMap, $side, $side);
         }
         $price = $this->safe_float($trade, 'price');
         $amount = $this->safe_float($trade, 'volume');
@@ -192,5 +193,24 @@ class kuna extends acx {
         );
         $response = $this->privateGetTradesMy (array_merge($request, $params));
         return $this->parse_trades($response, $market, $since, $limit);
+    }
+
+    public function fetch_ohlcv($symbol, $timeframe = '1m', $since = null, $limits = null, $params = array ()) {
+        $this->load_markets();
+        $trades = $this->fetch_trades($symbol, $since, $limits, $params);
+        $ohlcvc = $this->build_ohlcvc($trades, $timeframe, $since, $limits);
+        $result = array();
+        for ($i = 0; $i < count($ohlcvc); $i++) {
+            $ohlcv = $ohlcvc[$i];
+            $result[] = [
+                $ohlcv[0],
+                $ohlcv[1],
+                $ohlcv[2],
+                $ohlcv[3],
+                $ohlcv[4],
+                $ohlcv[5],
+            ];
+        }
+        return $result;
     }
 }

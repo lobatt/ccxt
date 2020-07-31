@@ -538,7 +538,7 @@ class idex extends Exchange {
             'address' => $this->walletAddress,
         );
         if ($since !== null) {
-            $request['start'] = intval ((int) floor($since / 1000));
+            $request['start'] = intval ($since / 1000);
         }
         $response = $this->publicPostReturnDepositsWithdrawals (array_merge($request, $params));
         // { $deposits:
@@ -639,6 +639,9 @@ class idex extends Exchange {
             $market = $this->market($symbol);
             $request['market'] = $market['id'];
         }
+        if ($limit !== null) {
+            $request['count'] = $limit;
+        }
         $response = $this->publicPostReturnOpenOrders (array_merge($request, $params));
         // array( { timestamp => 1564041428,
         //     orderHash:
@@ -703,30 +706,34 @@ class idex extends Exchange {
     }
 
     public function parse_order($order, $market = null) {
-        // { $filled => '0',
-        //   initialAmount => '210',
-        //   $timestamp => 1564041428,
-        //   orderHash:
-        //    '0x31c42154a8421425a18d076df400d9ec1ef64d5251285384a71ba3c0ab31beb4',
-        //   orderNumber => 1562323021,
-        //   $market => 'ETH_LIT',
-        //   type => 'buy',
-        //   $params:
-        //    array( tokenBuy => '0x763fa6806e1acf68130d2d0f0df754c93cc546b2',
-        //      buySymbol => 'LIT',
-        //      buyPrecision => 18,
-        //      amountBuy => '210000000000000000000',
-        //      tokenSell => '0x0000000000000000000000000000000000000000',
-        //      sellSymbol => 'ETH',
-        //      sellPrecision => 18,
-        //      amountSell => '153300000000000000',
-        //      expires => 100000,
-        //      nonce => 1,
-        //      user => '0x0ab991497116f7f5532a4c2f4f7b1784488628e1' ),
-        //   $price => '0.00073',
-        //   $amount => '210',
-        //   $status => 'open',
-        //   total => '0.1533' }
+        //
+        //     {
+        //         "$filled" => "0",
+        //         "initialAmount" => "210",
+        //         "$timestamp" => 1564041428,
+        //         "orderHash" => "0x31c42154a8421425a18d076df400d9ec1ef64d5251285384a71ba3c0ab31beb4",
+        //         "orderNumber" => 1562323021,
+        //         "$market" => "ETH_LIT",
+        //         "type" => "$buy",
+        //         "$params" => array(
+        //             "tokenBuy" => "0x763fa6806e1acf68130d2d0f0df754c93cc546b2",
+        //             "buySymbol" => "LIT",
+        //             "buyPrecision" => 18,
+        //             "amountBuy" => "210000000000000000000",
+        //             "tokenSell" => "0x0000000000000000000000000000000000000000",
+        //             "sellSymbol" => "ETH",
+        //             "sellPrecision" => 18,
+        //             "amountSell" => "153300000000000000",
+        //             "expires" => 100000,
+        //             "nonce" => 1,
+        //             "user" => "0x0ab991497116f7f5532a4c2f4f7b1784488628e1"
+        //         ),
+        //         "$price" => "0.00073",
+        //         "$amount" => "210",
+        //         "$status" => "open",
+        //         "total" => "0.1533"
+        //     }
+        //
         $timestamp = $this->safe_timestamp($order, 'timestamp');
         $side = $this->safe_string($order, 'type');
         $symbol = null;
@@ -741,7 +748,7 @@ class idex extends Exchange {
         $filled = $this->safe_float($order, 'filled');
         $price = $this->safe_float($order, 'price');
         $cost = $this->safe_float($order, 'total');
-        if (($cost !== null) && ($filled !== null) && !$cost) {
+        if (($cost === null) && ($filled !== null) && ($price !== null)) {
             $cost = $filled * $price;
         }
         if (is_array($order) && array_key_exists('market', $order)) {
@@ -802,8 +809,11 @@ class idex extends Exchange {
             $market = $this->market($symbol);
             $request['market'] = $market['id'];
         }
+        if ($since !== null) {
+            $request['start'] = intval ($since / 1000);
+        }
         if ($limit !== null) {
-            $request['start'] = intval ((int) floor($limit));
+            $request['count'] = $limit;
         }
         $response = $this->publicPostReturnTradeHistory (array_merge($request, $params));
         // { ETH_IDEX:

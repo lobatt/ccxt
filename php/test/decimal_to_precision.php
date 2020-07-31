@@ -54,6 +54,10 @@ assert (toWei ('0.001', 18) === '1000000000000000');
 assert (toWei (0.1, 18) === '100000000000000000');
 assert (toWei (0.01, 18) === '10000000000000000');
 assert (toWei (0.001, 18) === '1000000000000000');
+assert (toWei ('0.3323340739', 18) === '332334073900000000');
+assert (toWei (0.3323340739, 18) === '332334073900000000');
+assert (toWei ('0.009428', 18) === '9428000000000000');
+assert (toWei (0.009428, 18) === '9428000000000000');
 
 // $us test that we get the inverse for all these test
 assert (fromWei ('1000000000000000000', 18) === 1.0);
@@ -72,6 +76,10 @@ assert (fromWei ('1000000000000000', 18) === 0.001);
 assert (fromWei (100000000000000000, 18) === 0.1);
 assert (fromWei (10000000000000000, 18) === 0.01);
 assert (fromWei (1000000000000000, 18) === 0.001);
+assert (fromWei ('332334073900000000', 18) === 0.3323340739);
+assert (fromWei (332334073900000000, 18) === 0.3323340739);
+assert (fromWei ('9428000000000000', 18) === 0.009428);
+assert (fromWei (9428000000000000, 18) === 0.009428);
 
 // ----------------------------------------------------------------------------
 // number_to_string
@@ -220,6 +228,7 @@ assert (decimal_to_precision ('3210', TRUNCATE, 1110, TICK_SIZE) === '2220');
 assert (decimal_to_precision ('165', ROUND, 110, TICK_SIZE) === '220');
 assert (decimal_to_precision ('0.000123456789', ROUND, 0.00000012, TICK_SIZE) === '0.00012348');
 assert (decimal_to_precision ('0.000123456789', TRUNCATE, 0.00000012, TICK_SIZE) === '0.00012336');
+assert (decimal_to_precision ('0.000273398', ROUND, 1e-7, TICK_SIZE) === '0.0002734');
 
 assert (decimal_to_precision ('0.01', ROUND, 0.0001, TICK_SIZE, PAD_WITH_ZERO) === '0.0100');
 assert (decimal_to_precision ('0.01', TRUNCATE, 0.0001, TICK_SIZE, PAD_WITH_ZERO) === '0.0100');

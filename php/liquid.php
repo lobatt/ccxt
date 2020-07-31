@@ -100,6 +100,76 @@ class liquid extends Exchange {
                     ),
                 ),
             ),
+            'fees' => array(
+                'trading' => array(
+                    'tierBased' => true,
+                    'percentage' => true,
+                    'taker' => 0.0015,
+                    'maker' => 0.0000,
+                    'tiers' => array(
+                        'perpetual' => array(
+                            'maker' => array(
+                                array( 0, 0.0000 ),
+                                array( 25000, 0.0000 ),
+                                array( 50000, -0.00025 ),
+                                array( 100000, -0.00025 ),
+                                array( 1000000, -0.00025 ),
+                                array( 10000000, -0.00025 ),
+                                array( 25000000, -0.00025 ),
+                                array( 50000000, -0.00025 ),
+                                array( 75000000, -0.00025 ),
+                                array( 100000000, -0.00025 ),
+                                array( 200000000, -0.00025 ),
+                                array( 300000000, -0.00025 ),
+                            ),
+                            'taker' => array(
+                                array( 0, 0.000600 ),
+                                array( 25000, 0.000575 ),
+                                array( 50000, 0.000550 ),
+                                array( 100000, 0.000525 ),
+                                array( 1000000, 0.000500 ),
+                                array( 10000000, 0.000475 ),
+                                array( 25000000, 0.000450 ),
+                                array( 50000000, 0.000425 ),
+                                array( 75000000, 0.000400 ),
+                                array( 100000000, 0.000375 ),
+                                array( 200000000, 0.000350 ),
+                                array( 300000000, 0.000325 ),
+                            ),
+                        ),
+                        'spot' => array(
+                            'taker' => array(
+                                array( 0, 0.0015 ),
+                                array( 10000, 0.0015 ),
+                                array( 20000, 0.0014 ),
+                                array( 50000, 0.0013 ),
+                                array( 100000, 0.0010 ),
+                                array( 1000000, 0.0008 ),
+                                array( 5000000, 0.0006 ),
+                                array( 10000000, 0.0005 ),
+                                array( 25000000, 0.0005 ),
+                                array( 50000000, 0.00045 ),
+                                array( 100000000, 0.0004 ),
+                                array( 200000000, 0.0003 ),
+                            ),
+                            'maker' => array(
+                                array( 0, 0.0000 ),
+                                array( 10000, 0.0015 ),
+                                array( 20000, 0.1400 ),
+                                array( 50000, 0.1300 ),
+                                array( 100000, 0.0800 ),
+                                array( 1000000, 0.0004 ),
+                                array( 5000000, 0.00035 ),
+                                array( 10000000, 0.00025 ),
+                                array( 25000000, 0.0000 ),
+                                array( 50000000, 0.0000 ),
+                                array( 100000000, 0.0000 ),
+                                array( 200000000, 0.0000 ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
             'exceptions' => array(
                 'API rate limit exceeded. Please retry after 300s' => '\\ccxt\\DDoSProtection',
                 'API Authentication failed' => '\\ccxt\\AuthenticationError',
@@ -110,6 +180,7 @@ class liquid extends Exchange {
                 'not_enough_free_balance' => '\\ccxt\\InsufficientFunds',
                 'must_be_positive' => '\\ccxt\\InvalidOrder',
                 'less_than_order_size' => '\\ccxt\\InvalidOrder',
+                'price_too_high' => '\\ccxt\\InvalidOrder',
             ),
             'commonCurrencies' => array(
                 'WIN' => 'WCOIN',
@@ -183,7 +254,7 @@ class liquid extends Exchange {
     }
 
     public function fetch_markets($params = array ()) {
-        $markets = $this->publicGetProducts ();
+        $spot = $this->publicGetProducts ($params);
         //
         //     array(
         //         array(
@@ -210,24 +281,77 @@ class liquid extends Exchange {
         //             last_traded_quantity => '0.00590974',
         //             quoted_currency => 'SGD',
         //             base_currency => 'BTC',
-        //             disabled => false,
+        //             $disabled => false,
+        //         ),
+        //     )
+        //
+        $perpetual = $this->publicGetProducts (array( 'perpetual' => '1' ));
+        //
+        //     array(
+        //         array(
+        //             "$id" => "603",
+        //             "product_type" => "Perpetual",
+        //             "code" => "CASH",
+        //             "name" => null,
+        //             "market_ask" => "1143900",
+        //             "market_bid" => "1143250",
+        //             "currency" => "JPY",
+        //             "currency_pair_code" => "P-BTCJPY",
+        //             "pusher_channel" => "product_cash_p-btcjpy_603",
+        //             "taker_fee" => "0.0",
+        //             "maker_fee" => "0.0",
+        //             "low_market_bid" => "1124450.0",
+        //             "high_market_ask" => "1151750.0",
+        //             "volume_24h" => "0.1756",
+        //             "last_price_24h" => "1129850.0",
+        //             "last_traded_price" => "1144700.0",
+        //             "last_traded_quantity" => "0.014",
+        //             "quoted_currency" => "JPY",
+        //             "base_currency" => "P-BTC",
+        //             "tick_size" => "50.0",
+        //             "perpetual_enabled" => true,
+        //             "index_price" => "1142636.03935",
+        //             "mark_price" => "1143522.18417",
+        //             "funding_rate" => "0.00033",
+        //             "fair_price" => "1143609.31009",
+        //             "timestamp" => "1581558659.195353100",
         //         ),
         //     )
         //
         $currencies = $this->fetch_currencies();
         $currenciesByCode = $this->index_by($currencies, 'code');
         $result = array();
+        $markets = $this->array_concat($spot, $perpetual);
         for ($i = 0; $i < count($markets); $i++) {
             $market = $markets[$i];
-            $id = (string) $market['id'];
-            $baseId = $market['base_currency'];
-            $quoteId = $market['quoted_currency'];
+            $id = $this->safe_string($market, 'id');
+            $baseId = $this->safe_string($market, 'base_currency');
+            $quoteId = $this->safe_string($market, 'quoted_currency');
+            $productType = $this->safe_string($market, 'product_type');
+            $type = 'spot';
+            $spot = true;
+            $swap = false;
+            if ($productType === 'Perpetual') {
+                $spot = false;
+                $swap = true;
+                $type = 'swap';
+            }
             $base = $this->safe_currency_code($baseId);
             $quote = $this->safe_currency_code($quoteId);
-            $symbol = $base . '/' . $quote;
-            $maker = $this->safe_float($market, 'maker_fee');
-            $taker = $this->safe_float($market, 'taker_fee');
-            $active = !$market['disabled'];
+            $symbol = null;
+            if ($swap) {
+                $symbol = $this->safe_string($market, 'currency_pair_code');
+            } else {
+                $symbol = $base . '/' . $quote;
+            }
+            $maker = $this->fees['trading']['maker'];
+            $taker = $this->fees['trading']['taker'];
+            if ($type === 'swap') {
+                $maker = $this->safe_float($market, 'maker_fee', $this->fees['trading']['maker']);
+                $taker = $this->safe_float($market, 'taker_fee', $this->fees['trading']['taker']);
+            }
+            $disabled = $this->safe_value($market, 'disabled', false);
+            $active = !$disabled;
             $baseCurrency = $this->safe_value($currenciesByCode, $base);
             $quoteCurrency = $this->safe_value($currenciesByCode, $quote);
             $precision = array(
@@ -271,6 +395,9 @@ class liquid extends Exchange {
                 'quote' => $quote,
                 'baseId' => $baseId,
                 'quoteId' => $quoteId,
+                'type' => $type,
+                'spot' => $spot,
+                'swap' => $swap,
                 'maker' => $maker,
                 'taker' => $taker,
                 'limits' => $limits,
@@ -399,7 +526,7 @@ class liquid extends Exchange {
         return $this->parse_ticker($response, $market);
     }
 
-    public function parse_trade($trade, $market) {
+    public function parse_trade($trade, $market = null) {
         // {             $id =>  12345,
         //         quantity => "6.789",
         //            $price => "98765.4321",
@@ -426,13 +553,17 @@ class liquid extends Exchange {
             }
         }
         $id = $this->safe_string($trade, 'id');
+        $symbol = null;
+        if ($market !== null) {
+            $symbol = $market['symbol'];
+        }
         return array(
             'info' => $trade,
             'id' => $id,
             'order' => $orderId,
             'timestamp' => $timestamp,
             'datetime' => $this->iso8601($timestamp),
-            'symbol' => $market['symbol'],
+            'symbol' => $symbol,
             'type' => null,
             'side' => $side,
             'takerOrMaker' => $takerOrMaker,
@@ -478,13 +609,18 @@ class liquid extends Exchange {
 
     public function create_order($symbol, $type, $side, $amount, $price = null, $params = array ()) {
         $this->load_markets();
+        $clientOrderId = $this->safe_string_2($params, 'clientOrderId', 'client_order_id');
+        $params = $this->omit($params, array( 'clientOrderId', 'client_order_id' ));
         $request = array(
             'order_type' => $type,
             'product_id' => $this->market_id($symbol),
             'side' => $side,
             'quantity' => $this->amount_to_precision($symbol, $amount),
         );
-        if ($type === 'limit') {
+        if ($clientOrderId !== null) {
+            $request['client_order_id'] = $clientOrderId;
+        }
+        if (($type === 'limit') || ($type === 'limit_post_only') || ($type === 'market_with_range') || ($type === 'stop')) {
             $request['price'] = $this->price_to_precision($symbol, $price);
         }
         $response = $this->privatePostOrders (array_merge($request, $params));
@@ -507,7 +643,8 @@ class liquid extends Exchange {
         //         "product_code" => "CASH",
         //         "funding_currency" => "USD",
         //         "currency_pair_code" => "BTCUSD",
-        //         "order_fee" => "0.0"
+        //         "order_fee" => "0.0",
+        //         "client_order_id" => null,
         //     }
         //
         return $this->parse_order($response);
@@ -576,6 +713,7 @@ class liquid extends Exchange {
         //         "funding_currency" => "USD",
         //         "currency_pair_code" => "BTCUSD",
         //         "order_fee" => "0.0"
+        //         "client_order_id" => null,
         //     }
         //
         // fetchOrder, fetchOrders, fetchOpenOrders, fetchClosedOrders
@@ -662,9 +800,10 @@ class liquid extends Exchange {
             $remaining = $amount - $filled;
         }
         $side = $this->safe_string($order, 'side');
+        $clientOrderId = $this->safe_string($order, 'client_order_id');
         return array(
             'id' => $orderId,
-            'clientOrderId' => null,
+            'clientOrderId' => $clientOrderId,
             'timestamp' => $timestamp,
             'datetime' => $this->iso8601($timestamp),
             'lastTradeTimestamp' => $lastTradeTimestamp,
@@ -877,10 +1016,12 @@ class liquid extends Exchange {
             $nonce = $this->nonce();
             $request = array(
                 'path' => $url,
-                'nonce' => $nonce,
                 'token_id' => $this->apiKey,
                 'iat' => (int) floor($nonce / 1000), // issued at
             );
+            if (!(is_array($query) && array_key_exists('client_order_id', $query))) {
+                $request['nonce'] = $nonce;
+            }
             $headers['X-Quoine-Auth'] = $this->jwt($request, $this->encode($this->secret));
         } else {
             if ($query) {

@@ -19,6 +19,7 @@ from ccxt.base.errors import AuthenticationError
 from ccxt.base.errors import PermissionDenied
 from ccxt.base.errors import AccountSuspended
 from ccxt.base.errors import ArgumentsRequired
+from ccxt.base.errors import BadSymbol
 from ccxt.base.errors import InsufficientFunds
 from ccxt.base.errors import InvalidOrder
 from ccxt.base.errors import OrderNotFound
@@ -35,21 +36,27 @@ class bibox(Exchange):
             'countries': ['CN', 'US', 'KR'],
             'version': 'v1',
             'has': {
+                'cancelOrder': True,
                 'CORS': False,
-                'publicAPI': False,
+                'createMarketOrder': False,  # or they will return https://github.com/ccxt/ccxt/issues/2338
+                'createOrder': True,
                 'fetchBalance': True,
-                'fetchDeposits': True,
-                'fetchWithdrawals': True,
+                'fetchClosedOrders': True,
                 'fetchCurrencies': True,
+                'fetchDeposits': True,
                 'fetchDepositAddress': True,
                 'fetchFundingFees': True,
-                'fetchTickers': True,
-                'fetchOrder': True,
-                'fetchOpenOrders': True,
-                'fetchClosedOrders': True,
+                'fetchMarkets': True,
                 'fetchMyTrades': True,
                 'fetchOHLCV': True,
-                'createMarketOrder': False,  # or they will return https://github.com/ccxt/ccxt/issues/2338
+                'fetchOpenOrders': True,
+                'fetchOrder': True,
+                'fetchOrderBook': True,
+                'fetchTicker': True,
+                'fetchTickers': True,
+                'fetchTrades': True,
+                'fetchWithdrawals': True,
+                'publicAPI': False,
                 'withdraw': True,
             },
             'timeframes': {
@@ -125,6 +132,7 @@ class bibox(Exchange):
                 '2068': InvalidOrder,  # The number of orders can not be less than
                 '2085': InvalidOrder,  # Order quantity is too small
                 '3012': AuthenticationError,  # invalid apiKey
+                '3016': BadSymbol,  # Trading pair error
                 '3024': PermissionDenied,  # wrong apikey permissions
                 '3025': AuthenticationError,  # signature failed
                 '4000': ExchangeNotAvailable,  # current network is unstable
@@ -359,9 +367,19 @@ class bibox(Exchange):
         response = await self.publicGetMdata(self.extend(request, params))
         return self.parse_order_book(response['result'], self.safe_float(response['result'], 'update_time'), 'bids', 'asks', 'price', 'volume')
 
-    def parse_ohlcv(self, ohlcv, market=None, timeframe='1m', since=None, limit=None):
+    def parse_ohlcv(self, ohlcv, market=None):
+        #
+        #     {
+        #         "time":1591448220000,
+        #         "open":"0.02507029",
+        #         "high":"0.02507029",
+        #         "low":"0.02506349",
+        #         "close":"0.02506349",
+        #         "vol":"5.92000000"
+        #     }
+        #
         return [
-            ohlcv['time'],
+            self.safe_integer(ohlcv, 'time'),
             self.safe_float(ohlcv, 'open'),
             self.safe_float(ohlcv, 'high'),
             self.safe_float(ohlcv, 'low'),
@@ -379,7 +397,19 @@ class bibox(Exchange):
             'size': limit,
         }
         response = await self.publicGetMdata(self.extend(request, params))
-        return self.parse_ohlcvs(response['result'], market, timeframe, since, limit)
+        #
+        #     {
+        #         "result":[
+        #             {"time":1591448220000,"open":"0.02507029","high":"0.02507029","low":"0.02506349","close":"0.02506349","vol":"5.92000000"},
+        #             {"time":1591448280000,"open":"0.02506449","high":"0.02506975","low":"0.02506108","close":"0.02506843","vol":"5.72000000"},
+        #             {"time":1591448340000,"open":"0.02506698","high":"0.02506698","low":"0.02506452","close":"0.02506519","vol":"4.86000000"},
+        #         ],
+        #         "cmd":"kline",
+        #         "ver":"1.1"
+        #     }
+        #
+        result = self.safe_value(response, 'result', [])
+        return self.parse_ohlcvs(result, market, timeframe, since, limit)
 
     async def fetch_currencies(self, params={}):
         if not self.apiKey or not self.secret:

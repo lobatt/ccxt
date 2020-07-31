@@ -20,28 +20,32 @@ class deribit extends Exchange {
             'userAgent' => null,
             'rateLimit' => 500,
             'has' => array(
+                'cancelAllOrders' => true,
+                'cancelOrder' => true,
                 'CORS' => true,
+                'createDepositAddress' => true,
+                'createOrder' => true,
                 'editOrder' => true,
                 'fetchBalance' => true,
-                'fetchOrder' => true,
-                'fetchOrders' => false,
-                'fetchOpenOrders' => true,
                 'fetchClosedOrders' => true,
-                'fetchMyTrades' => true,
-                'fetchTickers' => true,
-                'fetchOHLCV' => true,
                 'fetchDepositAddress' => true,
-                'createDepositAddress' => true,
-                'fetchOrderTrades' => true,
-                'createOrder' => true,
-                'cancelOrder' => true,
-                'cancelAllOrders' => true,
-                'withdraw' => true,
-                'fetchTime' => true,
-                'fetchStatus' => true,
                 'fetchDeposits' => true,
-                'fetchWithdrawals' => true,
+                'fetchMarkets' => true,
+                'fetchMyTrades' => true,
+                'fetchOHLCV' => true,
+                'fetchOpenOrders' => true,
+                'fetchOrder' => true,
+                'fetchOrderBook' => true,
+                'fetchOrders' => false,
+                'fetchOrderTrades' => true,
+                'fetchStatus' => true,
+                'fetchTicker' => true,
+                'fetchTickers' => true,
+                'fetchTime' => true,
+                'fetchTrades' => true,
                 'fetchTransactions' => false,
+                'fetchWithdrawals' => true,
+                'withdraw' => true,
             ),
             'timeframes' => array(
                 '1m' => '1',
@@ -527,11 +531,13 @@ class deribit extends Exchange {
             'info' => $response,
         );
         $balance = $this->safe_value($response, 'result', array());
+        $currencyId = $this->safe_string($balance, 'currency');
+        $currencyCode = $this->safe_currency_code($currencyId);
         $account = $this->account();
         $account['free'] = $this->safe_float($balance, 'availableFunds');
         $account['used'] = $this->safe_float($balance, 'maintenanceMargin');
         $account['total'] = $this->safe_float($balance, 'equity');
-        $result[$code] = $account;
+        $result[$currencyCode] = $account;
         return $this->parse_balance($result);
     }
 
@@ -885,7 +891,7 @@ class deribit extends Exchange {
             // M = maker, T = taker, MT = both
             $takerOrMaker = ($liquidity === 'M') ? 'maker' : 'taker';
         }
-        $feeCost = $this->safe_float($trade, 'feeCost');
+        $feeCost = $this->safe_float($trade, 'fee');
         $fee = null;
         if ($feeCost !== null) {
             $feeCurrencyId = $this->safe_string($trade, 'fee_currency');

@@ -32,28 +32,32 @@ class deribit(Exchange):
             'userAgent': None,
             'rateLimit': 500,
             'has': {
+                'cancelAllOrders': True,
+                'cancelOrder': True,
                 'CORS': True,
+                'createDepositAddress': True,
+                'createOrder': True,
                 'editOrder': True,
                 'fetchBalance': True,
-                'fetchOrder': True,
-                'fetchOrders': False,
-                'fetchOpenOrders': True,
                 'fetchClosedOrders': True,
-                'fetchMyTrades': True,
-                'fetchTickers': True,
-                'fetchOHLCV': True,
                 'fetchDepositAddress': True,
-                'createDepositAddress': True,
-                'fetchOrderTrades': True,
-                'createOrder': True,
-                'cancelOrder': True,
-                'cancelAllOrders': True,
-                'withdraw': True,
-                'fetchTime': True,
-                'fetchStatus': True,
                 'fetchDeposits': True,
-                'fetchWithdrawals': True,
+                'fetchMarkets': True,
+                'fetchMyTrades': True,
+                'fetchOHLCV': True,
+                'fetchOpenOrders': True,
+                'fetchOrder': True,
+                'fetchOrderBook': True,
+                'fetchOrders': False,
+                'fetchOrderTrades': True,
+                'fetchStatus': True,
+                'fetchTicker': True,
+                'fetchTickers': True,
+                'fetchTime': True,
+                'fetchTrades': True,
                 'fetchTransactions': False,
+                'fetchWithdrawals': True,
+                'withdraw': True,
             },
             'timeframes': {
                 '1m': '1',
@@ -532,11 +536,13 @@ class deribit(Exchange):
             'info': response,
         }
         balance = self.safe_value(response, 'result', {})
+        currencyId = self.safe_string(balance, 'currency')
+        currencyCode = self.safe_currency_code(currencyId)
         account = self.account()
         account['free'] = self.safe_float(balance, 'availableFunds')
         account['used'] = self.safe_float(balance, 'maintenanceMargin')
         account['total'] = self.safe_float(balance, 'equity')
-        result[code] = account
+        result[currencyCode] = account
         return self.parse_balance(result)
 
     def create_deposit_address(self, code, params={}):
@@ -872,7 +878,7 @@ class deribit(Exchange):
         if liquidity is not None:
             # M = maker, T = taker, MT = both
             takerOrMaker = 'maker' if (liquidity == 'M') else 'taker'
-        feeCost = self.safe_float(trade, 'feeCost')
+        feeCost = self.safe_float(trade, 'fee')
         fee = None
         if feeCost is not None:
             feeCurrencyId = self.safe_string(trade, 'fee_currency')

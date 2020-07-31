@@ -32,21 +32,28 @@ class crex24(Exchange):
             # new metainfo interface
             'has': {
                 'cancelAllOrders': True,
+                'cancelOrder': True,
                 'CORS': False,
+                'createOrder': True,
                 'editOrder': True,
+                'fetchBalance': True,
                 'fetchBidsAsks': True,
                 'fetchClosedOrders': True,
                 'fetchCurrencies': True,
                 'fetchDepositAddress': True,
                 'fetchDeposits': True,
                 'fetchFundingFees': False,
+                'fetchMarkets': True,
                 'fetchMyTrades': True,
                 'fetchOHLCV': True,
                 'fetchOpenOrders': True,
                 'fetchOrder': True,
+                'fetchOrderBook': True,
                 'fetchOrders': True,
                 'fetchOrderTrades': True,
+                'fetchTicker': True,
                 'fetchTickers': True,
+                'fetchTrades': True,
                 'fetchTradingFee': False,  # actually, True, but will be implemented later
                 'fetchTradingFees': False,  # actually, True, but will be implemented later
                 'fetchTransactions': True,
@@ -143,7 +150,6 @@ class crex24(Exchange):
                 'fetchClosedOrdersMethod': 'tradingGetOrderHistory',  # or 'tradingGetActiveOrders'
                 'fetchTickersMethod': 'publicGetTicker24hr',
                 'defaultTimeInForce': 'GTC',  # 'GTC' = Good To Cancel(default), 'IOC' = Immediate Or Cancel
-                'defaultLimitOrderType': 'limit',  # or 'limit_maker'
                 'hasAlreadyAuthenticatedSuccessfully': False,
                 'warnOnFetchOpenOrdersWithoutSymbol': True,
                 'parseOrderToPrecision': False,  # force amounts and costs in parseOrder to precision
@@ -566,17 +572,19 @@ class crex24(Exchange):
         #
         return self.parse_trades(response, market, since, limit)
 
-    def parse_ohlcv(self, ohlcv, market=None, timeframe='1m', since=None, limit=None):
-        # {timestamp: '2019-09-21T10:36:00Z',
-        #     open: 0.02152,
-        #     high: 0.02156,
-        #     low: 0.02152,
-        #     close: 0.02156,
-        #     volume: 0.01741259}
-        date = self.safe_string(ohlcv, 'timestamp')
-        timestamp = self.parse8601(date)
+    def parse_ohlcv(self, ohlcv, market=None):
+        #
+        #     {
+        #         timestamp: '2019-09-21T10:36:00Z',
+        #         open: 0.02152,
+        #         high: 0.02156,
+        #         low: 0.02152,
+        #         close: 0.02156,
+        #         volume: 0.01741259
+        #     }
+        #
         return [
-            timestamp,
+            self.parse8601(self.safe_string(ohlcv, 'timestamp')),
             self.safe_float(ohlcv, 'open'),
             self.safe_float(ohlcv, 'high'),
             self.safe_float(ohlcv, 'low'),
@@ -594,6 +602,18 @@ class crex24(Exchange):
         if limit is not None:
             request['limit'] = limit  # Accepted values: 1 - 1000. If the parameter is not specified, the number of results is limited to 100
         response = await self.publicGetOhlcv(self.extend(request, params))
+        #
+        #     [
+        #         {
+        #             "timestamp": "2020-06-06T17:36:00Z",
+        #             "open": 0.025,
+        #             "high": 0.025,
+        #             "low": 0.02499,
+        #             "close": 0.02499,
+        #             "volume": 0.00643127
+        #         }
+        #     ]
+        #
         return self.parse_ohlcvs(response, market, timeframe, since, limit)
 
     def parse_order_status(self, status):

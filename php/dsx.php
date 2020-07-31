@@ -19,31 +19,38 @@ class dsx extends Exchange {
             'rateLimit' => 1500,
             'version' => 'v3',
             'has' => array(
+                'cancelOrder' => true,
                 'CORS' => false,
-                'createMarketOrder' => false,
-                'fetchOHLCV' => true,
-                'fetchOrder' => true,
-                'fetchOrders' => true,
-                'fetchOpenOrders' => true,
-                'fetchClosedOrders' => false,
-                'fetchOrderBooks' => false,
                 'createDepositAddress' => true,
+                'createMarketOrder' => false,
+                'createOrder' => true,
+                'fetchBalance' => true,
+                'fetchClosedOrders' => false,
                 'fetchDepositAddress' => true,
-                'fetchTransactions' => true,
-                'fetchTickers' => true,
+                'fetchMarkets' => true,
                 'fetchMyTrades' => true,
+                'fetchOHLCV' => true,
+                'fetchOpenOrders' => true,
+                'fetchOrder' => true,
+                'fetchOrderBook' => true,
+                'fetchOrderBooks' => true,
+                'fetchOrders' => true,
+                'fetchTicker' => true,
+                'fetchTickers' => true,
+                'fetchTransactions' => true,
+                'fetchTrades' => true,
                 'withdraw' => true,
             ),
             'urls' => array(
                 'logo' => 'https://user-images.githubusercontent.com/51840849/76909626-cb2bb100-68bc-11ea-99e0-28ba54f04792.jpg',
                 'api' => array(
-                    'public' => 'https://dsx.uk/mapi', // market data
-                    'private' => 'https://dsx.uk/tapi', // trading
-                    'dwapi' => 'https://dsx.uk/dwapi', // deposit/withdraw
+                    'public' => 'https://dsxglobal.com/mapi', // market data
+                    'private' => 'https://dsxglobal.com/tapi', // trading
+                    'dwapi' => 'https://dsxglobal.com/dwapi', // deposit/withdraw
                 ),
-                'www' => 'https://dsx.uk',
+                'www' => 'https://dsxglobal.com',
                 'doc' => array(
-                    'https://dsx.uk/developers/publicApi',
+                    'https://dsxglobal.com/developers/publicApi',
                 ),
             ),
             'fees' => array(
@@ -120,6 +127,7 @@ class dsx extends Exchange {
                     'data unavailable' => '\\ccxt\\ExchangeNotAvailable',
                     'external service unavailable' => '\\ccxt\\ExchangeNotAvailable',
                     'nonce is invalid' => '\\ccxt\\InvalidNonce', // array("success":0,"error":"Parameter => nonce is invalid")
+                    'Incorrect volume' => '\\ccxt\\InvalidOrder', // array("success" => 0,"error":"Order was rejected. Incorrect volume.")
                 ),
             ),
             'options' => array(
@@ -569,7 +577,7 @@ class dsx extends Exchange {
         return $this->parse_trades($response[$market['id']], $market, $since, $limit);
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
+    public function parse_ohlcv($ohlcv, $market = null) {
         //
         //     {
         //         "high" : 0.01955,
@@ -717,9 +725,6 @@ class dsx extends Exchange {
             'filled' => $filled,
             'fee' => null,
             // 'trades' => $this->parse_trades(order['trades'], $market),
-            'clientOrderId' => null,
-            'average' => null,
-            'trades' => null,
         );
     }
 
@@ -846,7 +851,6 @@ class dsx extends Exchange {
             'status' => $status,
             'fee' => $fee,
             'trades' => $trades,
-            'average' => null,
         );
     }
 

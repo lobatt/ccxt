@@ -3,7 +3,7 @@
 //  ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError, InsufficientFunds, OrderNotFound } = require ('./base/errors');
+const { ExchangeError, InsufficientFunds, OrderNotFound, ArgumentsRequired } = require ('./base/errors');
 
 //  ---------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ module.exports = class tidebit extends Exchange {
                 '1w': '10080',
             },
             'urls': {
-                'logo': 'https://user-images.githubusercontent.com/1294454/39034921-e3acf016-4480-11e8-9945-a6086a1082fe.jpg',
+                'logo': 'https://user-images.githubusercontent.com/51840849/87460811-1e690280-c616-11ea-8652-69f187305add.jpg',
                 'api': 'https://www.tidebit.com',
                 'www': 'https://www.tidebit.com',
                 'doc': [
@@ -237,19 +237,12 @@ module.exports = class tidebit extends Exchange {
         for (let i = 0; i < ids.length; i++) {
             const id = ids[i];
             let market = undefined;
-            let symbol = id;
             if (id in this.markets_by_id) {
                 market = this.markets_by_id[id];
-                symbol = market['symbol'];
-            } else {
-                const baseId = id.slice (0, 3);
-                const quoteId = id.slice (3, 6);
-                const base = this.safeCurrencyCode (baseId);
-                const quote = this.safeCurrencyCode (quoteId);
-                symbol = base + '/' + quote;
+                const symbol = market['symbol'];
+                const ticker = tickers[id];
+                result[symbol] = this.parseTicker (ticker, market);
             }
-            const ticker = tickers[id];
-            result[symbol] = this.parseTicker (ticker, market);
         }
         return result;
     }
@@ -301,14 +294,24 @@ module.exports = class tidebit extends Exchange {
         return this.parseTrades (response, market, since, limit);
     }
 
-    parseOHLCV (ohlcv, market = undefined, timeframe = '1m', since = undefined, limit = undefined) {
+    parseOHLCV (ohlcv, market = undefined) {
+        //
+        //     [
+        //         1498530360,
+        //         2700.0,
+        //         2700.0,
+        //         2700.0,
+        //         2700.0,
+        //         0.01
+        //     ]
+        //
         return [
-            ohlcv[0] * 1000,
-            ohlcv[1],
-            ohlcv[2],
-            ohlcv[3],
-            ohlcv[4],
-            ohlcv[5],
+            this.safeTimestamp (ohlcv, 0),
+            this.safeFloat (ohlcv, 1),
+            this.safeFloat (ohlcv, 2),
+            this.safeFloat (ohlcv, 3),
+            this.safeFloat (ohlcv, 4),
+            this.safeFloat (ohlcv, 5),
         ];
     }
 
@@ -329,6 +332,13 @@ module.exports = class tidebit extends Exchange {
             request['timestamp'] = 1800000;
         }
         const response = await this.publicGetK (this.extend (request, params));
+        //
+        //     [
+        //         [1498530360,2700.0,2700.0,2700.0,2700.0,0.01],
+        //         [1498530420,2700.0,2700.0,2700.0,2700.0,0],
+        //         [1498530480,2700.0,2700.0,2700.0,2700.0,0],
+        //     ]
+        //
         if (response === 'null') {
             return [];
         }
@@ -460,7 +470,7 @@ module.exports = class tidebit extends Exchange {
         const currency = this.currency (code);
         const id = this.safeString (params, 'id');
         if (id === undefined) {
-            throw new ExchangeError (this.id + ' withdraw() requires an extra `id` param (withdraw account id according to withdraws/bind_account_list endpoint');
+            throw new ArgumentsRequired (this.id + ' withdraw() requires an extra `id` param (withdraw account id according to withdraws/bind_account_list endpoint');
         }
         const request = {
             'id': id,

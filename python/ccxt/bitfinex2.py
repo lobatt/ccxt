@@ -354,7 +354,7 @@ class bitfinex2(bitfinex):
             quoteId = self.get_currency_id(quoteId)
             precision = {
                 'price': self.safe_integer(market, 'price_precision'),
-                'amount': self.safe_integer(market, 'price_precision'),
+                'amount': 8,  # https://github.com/ccxt/ccxt/issues/7310
             }
             limits = {
                 'amount': {
@@ -661,21 +661,30 @@ class bitfinex2(bitfinex):
             'limit': limit,
         }
         response = self.publicGetCandlesTradeTimeframeSymbolHist(self.extend(request, params))
+        #
+        #     [
+        #         [1591503840000,0.025069,0.025068,0.025069,0.025068,1.97828998],
+        #         [1591504500000,0.025065,0.025065,0.025065,0.025065,1.0164],
+        #         [1591504620000,0.025062,0.025062,0.025062,0.025062,0.5],
+        #     ]
+        #
         return self.parse_ohlcvs(response, market, timeframe, since, limit)
 
     def parse_order_status(self, status):
+        if status is None:
+            return status
+        parts = status.split(' ')
+        state = self.safe_string(parts, 0)
         statuses = {
             'ACTIVE': 'open',
-            'PARTIALLY FILLED': 'open',
+            'PARTIALLY': 'open',
             'EXECUTED': 'closed',
             'CANCELED': 'canceled',
-            'CANCELED was: PARTIALLY FILLED': 'canceled',
-            'INSUFFICIENT MARGIN': 'canceled',
-            'INSUFFICIENT BALANCE(G1) was: PARTIALLY FILLED': 'canceled',
+            'INSUFFICIENT': 'canceled',
             'RSN_DUST': 'rejected',
             'RSN_PAUSE': 'rejected',
         }
-        return self.safe_string(statuses, status, status)
+        return self.safe_string(statuses, state, status)
 
     def parse_order(self, order, market=None):
         id = self.safe_string(order, 0)
@@ -739,6 +748,10 @@ class bitfinex2(bitfinex):
         }
         if type != 'market':
             request['price'] = self.number_to_string(price)
+        clientOrderId = self.safe_value_2(params, 'cid', 'clientOrderId')
+        if clientOrderId is not None:
+            request['cid'] = clientOrderId
+            params = self.omit(params, ['cid', 'clientOrderId'])
         response = self.privatePostAuthWOrderSubmit(self.extend(request, params))
         #
         #     [
@@ -805,16 +818,17 @@ class bitfinex2(bitfinex):
         return self.parse_orders(orders)
 
     def cancel_order(self, id, symbol=None, params={}):
-        cid = self.safe_value(params, 'cid')  # client order id
+        cid = self.safe_value_2(params, 'cid', 'clientOrderId')  # client order id
         request = None
         if cid is not None:
             cidDate = self.safe_value(params, 'cidDate')  # client order id date
             if cidDate is None:
-                raise InvalidOrder(self.id + " canceling an order by client order id('cid') requires both 'cid' and 'cid_date'('YYYY-MM-DD')")
+                raise InvalidOrder(self.id + " canceling an order by clientOrderId('cid') requires both 'cid' and 'cid_date'('YYYY-MM-DD')")
             request = {
                 'cid': cid,
                 'cid_date': cidDate,
             }
+            params = self.omit(params, ['cid', 'clientOrderId'])
         else:
             request = {
                 'id': int(id),
@@ -996,14 +1010,19 @@ class bitfinex2(bitfinex):
         if id == 0:
             id = None
             status = 'failed'
+        tag = self.safe_string(data, 3)
         return {
             'info': transaction,
             'id': id,
             'txid': None,
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
+            'addressFrom': None,
             'address': None,  # self is actually the tag for XRP transfers(the address is missing)
-            'tag': self.safe_string(data, 3),  # refix it properly for the tag from description
+            'addressTo': None,
+            'tagFrom': None,
+            'tag': tag,  # refix it properly for the tag from description
+            'tagTo': tag,
             'type': 'withdrawal',
             'amount': amount,
             'currency': code,

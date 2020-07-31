@@ -41,6 +41,7 @@ class aofex(Exchange):
                 'fetchOpenOrders': True,
                 'fetchClosedOrders': True,
                 'fetchClosedOrder': True,
+                'fetchOrderTrades': True,
                 'fetchTradingFee': True,
             },
             'timeframes': {
@@ -234,7 +235,7 @@ class aofex(Exchange):
             })
         return result
 
-    def parse_ohlcv(self, ohlcv, market=None, timeframe='5m', since=None, limit=None):
+    def parse_ohlcv(self, ohlcv, market=None):
         #
         #     {
         #         id:  1584950100,
@@ -302,7 +303,7 @@ class aofex(Exchange):
         #
         result = self.safe_value(response, 'result', {})
         data = self.safe_value(result, 'data', [])
-        return self.parse_ohlcvs(data, market, timeframe, since, limit)
+        return self.parse_ohlcvs(data, market, since, limit)
 
     async def fetch_balance(self, params={}):
         await self.load_markets()
@@ -548,7 +549,7 @@ class aofex(Exchange):
         #
         id = self.safe_string(trade, 'id')
         ctime = self.parse8601(self.safe_string(trade, 'ctime'))
-        timestamp = self.safe_timestamp(trade, 'ts', ctime)
+        timestamp = self.safe_timestamp(trade, 'ts', ctime) - 28800000  # 8 hours, adjust to UTC
         symbol = None
         if (symbol is None) and (market is not None):
             symbol = market['symbol']
@@ -704,6 +705,8 @@ class aofex(Exchange):
             base = market['base']
             quote = market['quote']
         timestamp = self.parse8601(self.safe_string(order, 'ctime'))
+        if timestamp is not None:
+            timestamp -= 28800000  # 8 hours, adjust to UTC
         orderType = self.safe_string(order, 'type')
         type = 'limit' if (orderType == '2') else 'market'
         side = self.safe_string(order, 'side')
@@ -843,11 +846,15 @@ class aofex(Exchange):
         order['trades'] = trades
         return self.parse_order(order)
 
+    async def fetch_order_trades(self, id, symbol=None, since=None, limit=None, params={}):
+        response = await self.fetch_closed_order(id, symbol, params)
+        return self.safe_value(response, 'trades', [])
+
     async def fetch_orders_with_method(self, method, symbol=None, since=None, limit=None, params={}):
         await self.load_markets()
         request = {
             # 'from': 'BM7442641584965237751ZMAKJ5',  # query start order_sn
-            # 'direct': 'prev',  # next
+            'direct': 'prev',  # next
         }
         market = None
         if symbol is not None:

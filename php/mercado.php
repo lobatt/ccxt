@@ -95,6 +95,7 @@ class mercado extends Exchange {
                 'BCH/BRL' => array( 'id' => 'BRLBCH', 'symbol' => 'BCH/BRL', 'base' => 'BCH', 'quote' => 'BRL', 'precision' => array( 'amount' => 8, 'price' => 5 ), 'suffix' => 'BCash' ),
                 'XRP/BRL' => array( 'id' => 'BRLXRP', 'symbol' => 'XRP/BRL', 'base' => 'XRP', 'quote' => 'BRL', 'precision' => array( 'amount' => 8, 'price' => 5 ), 'suffix' => 'Ripple' ),
                 'ETH/BRL' => array( 'id' => 'BRLETH', 'symbol' => 'ETH/BRL', 'base' => 'ETH', 'quote' => 'BRL', 'precision' => array( 'amount' => 8, 'price' => 5 ), 'suffix' => 'Ethereum' ),
+                'USDC/BRL' => array( 'id' => 'BRLUSDC', 'symbol' => 'USDC/BRL', 'base' => 'USDC', 'quote' => 'BRL', 'precision' => array( 'amount' => 8, 'price' => 5 ), 'suffix' => 'USDC' ),
             ),
             'fees' => array(
                 'trading' => array(
@@ -403,17 +404,17 @@ class mercado extends Exchange {
         if ($code === 'BRL') {
             $account_ref = (is_array($params) && array_key_exists('account_ref', $params));
             if (!$account_ref) {
-                throw new ExchangeError($this->id . ' requires $account_ref parameter to withdraw ' . $code);
+                throw new ArgumentsRequired($this->id . ' requires $account_ref parameter to withdraw ' . $code);
             }
         } else if ($code !== 'LTC') {
             $tx_fee = (is_array($params) && array_key_exists('tx_fee', $params));
             if (!$tx_fee) {
-                throw new ExchangeError($this->id . ' requires $tx_fee parameter to withdraw ' . $code);
+                throw new ArgumentsRequired($this->id . ' requires $tx_fee parameter to withdraw ' . $code);
             }
             if ($code === 'XRP') {
                 if ($tag === null) {
                     if (!(is_array($params) && array_key_exists('destination_tag', $params))) {
-                        throw new ExchangeError($this->id . ' requires a $tag argument or destination_tag parameter to withdraw ' . $code);
+                        throw new ArgumentsRequired($this->id . ' requires a $tag argument or destination_tag parameter to withdraw ' . $code);
                     }
                 } else {
                     $request['destination_tag'] = $tag;
@@ -427,7 +428,7 @@ class mercado extends Exchange {
         );
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
+    public function parse_ohlcv($ohlcv, $market = null) {
         return array(
             $this->safe_timestamp($ohlcv, 'timestamp'),
             $this->safe_float($ohlcv, 'open'),

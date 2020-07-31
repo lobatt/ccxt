@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError, ArgumentsRequired, ExchangeNotAvailable, InvalidNonce, InsufficientFunds, OrderNotFound, DDoSProtection, InvalidOrder, AuthenticationError } = require ('./base/errors');
+const { ExchangeError, ArgumentsRequired, ExchangeNotAvailable, InvalidNonce, InsufficientFunds, OrderNotFound, DDoSProtection, InvalidOrder, AuthenticationError, RateLimitExceeded } = require ('./base/errors');
 
 // ---------------------------------------------------------------------------
 
@@ -89,6 +89,7 @@ module.exports = class yobit extends Exchange {
                 'BPC': 'BitcoinPremium',
                 'BTS': 'Bitshares2',
                 'CAT': 'BitClave',
+                'CBC': 'CryptoBossCoin',
                 'CMT': 'CometCoin',
                 'COV': 'Coven Coin',
                 'COVX': 'COV',
@@ -142,6 +143,7 @@ module.exports = class yobit extends Exchange {
                 'REP': 'Republicoin',
                 'RUR': 'RUB',
                 'TTC': 'TittieCoin',
+                'VOL': 'VolumeCoin',
                 'XIN': 'XINCoin',
             },
             'options': {
@@ -167,14 +169,18 @@ module.exports = class yobit extends Exchange {
                     'api key dont have trade permission': AuthenticationError,
                     'invalid parameter': InvalidOrder,
                     'invalid order': InvalidOrder,
+                    'The given order has already been cancelled': InvalidOrder,
                     'Requests too often': DDoSProtection,
                     'not available': ExchangeNotAvailable,
                     'data unavailable': ExchangeNotAvailable,
                     'external service unavailable': ExchangeNotAvailable,
-                    'Total transaction amount': ExchangeError, // { "success": 0, "error": "Total transaction amount is less than minimal total: 0.00010000"}
+                    'Total transaction amount': InvalidOrder, // { "success": 0, "error": "Total transaction amount is less than minimal total: 0.00010000"}
+                    'The given order has already been closed and cannot be cancelled': InvalidOrder,
                     'Insufficient funds': InsufficientFunds,
                     'invalid key': AuthenticationError,
                     'invalid nonce': InvalidNonce, // {"success":0,"error":"invalid nonce (has already been used)"}'
+                    'Total order amount is less than minimal amount': InvalidOrder,
+                    'Rate Limited': RateLimitExceeded,
                 },
             },
         });

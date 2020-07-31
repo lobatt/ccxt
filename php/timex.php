@@ -49,6 +49,7 @@ class timex extends Exchange {
                 'api' => 'https://plasma-relay-backend.timex.io',
                 'www' => 'https://timex.io',
                 'doc' => 'https://docs.timex.io',
+                'referral' => 'https://timex.io/?refcode=1x27vNkTbP1uwkCck',
             ),
             'api' => array(
                 'custody' => array(
@@ -229,7 +230,7 @@ class timex extends Exchange {
         $response = $this->publicGetCurrencies ($params);
         //
         //     array(
-        //         {
+        //         array(
         //             "symbol" => "BTC",
         //             "name" => "Bitcoin",
         //             "address" => "0x8370fbc6ddec1e18b4e41e72ed943e238458487c",
@@ -249,7 +250,7 @@ class timex extends Exchange {
         //             "active" => true,
         //             "withdrawalFee" => "50000000000000000",
         //             "purchaseCommissions" => array()
-        //         },
+        //         ),
         //     )
         //
         $result = array();
@@ -899,7 +900,21 @@ class timex extends Exchange {
         //         "$active" => true,
         //         "withdrawalFee" => "50000000000000000",
         //         "purchaseCommissions" => array()
-        //     },
+        //     }
+        //
+        // https://github.com/ccxt/ccxt/issues/6878
+        //
+        //     {
+        //         "symbol":"XRP",
+        //         "$name":"Ripple",
+        //         "address":"0x0dc8882914f3ddeebf4cec6dc20edb99df3def6c",
+        //         "decimals":6,
+        //         "$tradeDecimals":16,
+        //         "depositEnabled":true,
+        //         "withdrawalEnabled":true,
+        //         "transferEnabled":true,
+        //         "$active":true
+        //     }
         //
         $id = $this->safe_string($currency, 'symbol');
         $code = $this->safe_currency_code($id);
@@ -908,20 +923,22 @@ class timex extends Exchange {
         $active = $this->safe_value($currency, 'active');
         // $fee = $this->safe_float($currency, 'withdrawalFee');
         $feeString = $this->safe_string($currency, 'withdrawalFee');
-        $feeStringLen = is_array($feeString) ? count($feeString) : 0;
         $tradeDecimals = $this->safe_integer($currency, 'tradeDecimals');
         $fee = null;
-        $dotIndex = $feeStringLen - $tradeDecimals;
-        if ($dotIndex > 0) {
-            $whole = mb_substr($feeString, 0, $dotIndex - 0);
-            $fraction = mb_substr($feeString, -$dotIndex);
-            $fee = floatval ($whole . '.' . $fraction);
-        } else {
-            $fraction = '.';
-            for ($i = 0; $i < -$dotIndex; $i++) {
-                $fraction .= '0';
+        if (($feeString !== null) && ($tradeDecimals !== null)) {
+            $feeStringLen = is_array($feeString) ? count($feeString) : 0;
+            $dotIndex = $feeStringLen - $tradeDecimals;
+            if ($dotIndex > 0) {
+                $whole = mb_substr($feeString, 0, $dotIndex - 0);
+                $fraction = mb_substr($feeString, -$dotIndex);
+                $fee = floatval ($whole . '.' . $fraction);
+            } else {
+                $fraction = '.';
+                for ($i = 0; $i < -$dotIndex; $i++) {
+                    $fraction .= '0';
+                }
+                $fee = floatval ($fraction . $feeString);
             }
-            $fee = floatval ($fraction . $feeString);
         }
         return array(
             'id' => $code,
@@ -1094,7 +1111,7 @@ class timex extends Exchange {
         );
     }
 
-    public function parse_ohlcv($ohlcv, $market = null, $timeframe = '1m', $since = null, $limit = null) {
+    public function parse_ohlcv($ohlcv, $market = null) {
         //
         //     {
         //         "timestamp":"2019-12-04T23:00:00",
@@ -1112,7 +1129,7 @@ class timex extends Exchange {
             $this->safe_float($ohlcv, 'high'),
             $this->safe_float($ohlcv, 'low'),
             $this->safe_float($ohlcv, 'close'),
-            $this->safe_float($ohlcv, 'volumeQuote'),
+            $this->safe_float($ohlcv, 'volume'),
         );
     }
 

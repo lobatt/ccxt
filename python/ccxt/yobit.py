@@ -19,6 +19,7 @@ from ccxt.base.errors import InsufficientFunds
 from ccxt.base.errors import InvalidOrder
 from ccxt.base.errors import OrderNotFound
 from ccxt.base.errors import DDoSProtection
+from ccxt.base.errors import RateLimitExceeded
 from ccxt.base.errors import ExchangeNotAvailable
 from ccxt.base.errors import InvalidNonce
 
@@ -106,6 +107,7 @@ class yobit(Exchange):
                 'BPC': 'BitcoinPremium',
                 'BTS': 'Bitshares2',
                 'CAT': 'BitClave',
+                'CBC': 'CryptoBossCoin',
                 'CMT': 'CometCoin',
                 'COV': 'Coven Coin',
                 'COVX': 'COV',
@@ -159,6 +161,7 @@ class yobit(Exchange):
                 'REP': 'Republicoin',
                 'RUR': 'RUB',
                 'TTC': 'TittieCoin',
+                'VOL': 'VolumeCoin',
                 'XIN': 'XINCoin',
             },
             'options': {
@@ -184,14 +187,18 @@ class yobit(Exchange):
                     'api key dont have trade permission': AuthenticationError,
                     'invalid parameter': InvalidOrder,
                     'invalid order': InvalidOrder,
+                    'The given order has already been cancelled': InvalidOrder,
                     'Requests too often': DDoSProtection,
                     'not available': ExchangeNotAvailable,
                     'data unavailable': ExchangeNotAvailable,
                     'external service unavailable': ExchangeNotAvailable,
-                    'Total transaction amount': ExchangeError,  # {"success": 0, "error": "Total transaction amount is less than minimal total: 0.00010000"}
+                    'Total transaction amount': InvalidOrder,  # {"success": 0, "error": "Total transaction amount is less than minimal total: 0.00010000"}
+                    'The given order has already been closed and cannot be cancelled': InvalidOrder,
                     'Insufficient funds': InsufficientFunds,
                     'invalid key': AuthenticationError,
                     'invalid nonce': InvalidNonce,  # {"success":0,"error":"invalid nonce(has already been used)"}'
+                    'Total order amount is less than minimal amount': InvalidOrder,
+                    'Rate Limited': RateLimitExceeded,
                 },
             },
         })
