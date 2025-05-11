@@ -1,8 +1,8 @@
+import CryptoJS from 'crypto-js';
 import Exchange from './abstract/bitcointry.js';
 import { ArgumentsRequired, InvalidOrder, OrderNotFound, AuthenticationError, InsufficientFunds } from './base/errors.js';
 import { TICK_SIZE } from './base/functions/number.js';
 import type { OrderSide, OrderType, Order, Balances, Market } from './base/types.js';
-import { sha512 } from './static_dependencies/noble-hashes/sha512.js'; // Add this import
 
 export default class bitcointry extends Exchange {
     describe (): any {
@@ -47,8 +47,8 @@ export default class bitcointry extends Exchange {
             'urls': {
                 'logo': 'https://bitcointry.com/assets/images/logo.png',
                 'api': {
-                    'public': 'https://api.bitcointry.com',
-                    'private': 'https://api.bitcointry.com',
+                    'public': 'https://api.bitcointry.com/api/v1',
+                    'private': 'https://api.bitcointry.com/api/v1',
                 },
                 'www': 'https://bitcointry.com',
                 'doc': 'https://bitcointry.com/en/api/v1',
@@ -56,7 +56,7 @@ export default class bitcointry extends Exchange {
             'api': {
                 'public': {
                     'get': [
-                        'markets',
+                        'summary',
                         'ticker/{symbol}',
                         'tickers',
                         'orderbook/{symbol}',
@@ -66,8 +66,9 @@ export default class bitcointry extends Exchange {
                 },
                 'private': {
                     'get': [
-                        'account/balances',
-                        'orders',
+                        'getBalance',
+                        'allOrders',
+                        'openOrders',
                         'orders/{id}',
                         'trades',
                     ],
@@ -106,12 +107,12 @@ export default class bitcointry extends Exchange {
     }
 
     async fetchMarkets (params = {}): Promise<Market[]> {
-        const response = await this.publicGetMarkets (params);
+        const response = await this.publicGetSummary (params);
         const markets = this.safeValue (response, 'data', []);
         const result = [];
         for (let i = 0; i < markets.length; i++) {
             const market = markets[i];
-            const id = this.safeString (market, 'symbol');
+            const id = this.safeString (market, 'trading_pairs');
             const baseId = this.safeString (market, 'base_currency');
             const quoteId = this.safeString (market, 'quote_currency');
             const base = this.safeCurrencyCode (baseId);
@@ -218,7 +219,7 @@ export default class bitcointry extends Exchange {
 
     async fetchBalance (params = {}): Promise<Balances> {
         await this.loadMarkets ();
-        const response = await this.privateGetAccountBalances (params);
+        const response = await this.privateGetGetBalance (params);
         const result = { 'info': response };
         const balances = this.safeValue (response, 'data', []);
         for (let i = 0; i < balances.length; i++) {
@@ -234,6 +235,13 @@ export default class bitcointry extends Exchange {
         return this.parseBalance (result);
     }
 
+    encrypt (data, key): string {
+        data = data.toString ();
+        const KeyObj = CryptoJS.enc.Utf8.parse (key);
+        const ecrypted = CryptoJS.AES.encrypt (data, KeyObj, { 'mode': CryptoJS.mode.ECB, 'format': CryptoJS.format.Hex });
+        return ecrypted.toString ();
+    }
+
     sign (path, api = 'public', method = 'GET', params = {}, headers = undefined, body = undefined) {
         let url = this.urls['api'][api] + '/' + this.implodeParams (path, params);
         const query = this.omit (params, this.extractParams (path));
@@ -244,18 +252,18 @@ export default class bitcointry extends Exchange {
         } else {
             this.checkRequiredCredentials ();
             const timestamp = this.milliseconds ().toString ();
-            let totalParams = '';
+            const queryString = this.urlencode (this.extend (query, { 'timestamp': timestamp }));
+            const signature = this.encrypt (queryString, this.secret);
+            // let totalParams = ''; // Removed
             if (method === 'POST') {
                 body = this.json (query);
-                totalParams = body;
+                // totalParams = body; // Removed
             } else {
                 if (Object.keys (query).length) {
-                    const queryString = this.urlencode (query);
-                    url += '?' + queryString;
-                    totalParams = queryString;
+                    url += '?' + queryString + '&signature=' + signature;
+                    // totalParams = queryString; // Removed
                 }
             }
-            const signature = this.hmac (this.encode (totalParams), this.encode (this.secret), sha512, 'hex'); // Fix hmac call
             headers = {
                 'Content-Type': 'application/json',
                 'X-API-KEY': this.apiKey,
